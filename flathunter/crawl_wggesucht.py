@@ -40,7 +40,7 @@ class CrawlWgGesucht(Crawler):
             rooms = re.findall(r'\d Zimmer', details_array[0])[0][:1]
             dates = re.findall(r'\d{2}.\d{2}.\d{4}',
                                numbers_row.find("div", {"class": "text-center"}).text)
-            size = re.findall(r'\d{2,4}\sm²',
+            size = re.findall(r'\d{1,4}\sm²',
                               numbers_row.find("div", {"class": "text-right"}).text)[0]
 
             details = {
