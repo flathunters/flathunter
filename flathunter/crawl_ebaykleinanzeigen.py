@@ -81,6 +81,7 @@ class CrawlEbayKleinanzeigen(Crawler):
                 rooms = re.match(r'(\d+)', tags[1].text)[1]
             except TypeError:
                 self.__log__.debug("exception handling for: 'NoneType' object is not subscriptable'")
+                rooms = "Nicht gegeben"
             except IndexError:
                 self.__log__.debug("Keine Zimmeranzahl gegeben")
                 rooms = "Nicht gegeben"
