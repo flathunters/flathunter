@@ -1,11 +1,7 @@
 """Functions and classes related to sending Apprise messages"""
-import urllib.request
-import urllib.parse
-import urllib.error
-import requests
 import apprise
 
-from flathunter.logging import logger
+from flathunter.exceptions import NotificationException
 from flathunter.abstract_processor import Processor
 
 class SenderApprise(Processor):
@@ -28,18 +24,29 @@ class SenderApprise(Processor):
         self.send_msg(message)
         return expose
 
-    def send_msg(self, message):
-        apobj = apprise.Apprise()
-        """Send messages to each of the Apprise urls"""
-        if self.apprise_urls is None:
+    @staticmethod
+    def send(message, apprise_urls):
+        """Send messages using Apprise to a collection of URLs"""
+        if apprise_urls is None or len(apprise_urls) == 0:
             return
-        for apprise_url in self.apprise_urls:
+
+        apobj = apprise.Apprise()
+
+        for apprise_url in apprise_urls:
             apobj.add(apprise_url)
 
-        apobj.notify(
+        all_successful = apobj.notify(
             body=message,
             title='',
             body_format=apprise.NotifyFormat.TEXT,
         )
+
+        if not all_successful:
+            raise NotificationException("Unable to send all the notifications")
+
+
+    def send_msg(self, message):
+        """Send messages to each of the Apprise URLs"""
+        SenderApprise.send(message, self.apprise_urls)
 
         

@@ -3,7 +3,7 @@ from flathunter.logging import logger
 from flathunter.hunter import Hunter
 from flathunter.filter import Filter
 from flathunter.processor import ProcessorChain
-from flathunter.exceptions import BotBlockedException, UserDeactivatedException
+from flathunter.exceptions import NotificationException
 
 class WebHunter(Hunter):
     """Flathunter implementation for website. Designed to hunt all exposes from
@@ -41,14 +41,11 @@ class WebHunter(Hunter):
                                                 .build()
                 for message in processor_chain.process(new_exposes):
                     logger.debug("Sent expose %d to user %d", message['id'], user_id)
-            except BotBlockedException:
-                logger.warn("Bot has been blocked by user %d - updating settings", user_id)
+            except NotificationException:
+                logger.warn("Unable to send all notifications to %d - updating settings", user_id)
                 settings["mute_notifications"] = True
                 self.id_watch.save_settings_for_user(user_id, settings)
-            except UserDeactivatedException:
-                logger.warn("User %d has deactivated their telegram account - updating settings", user_id)
-                settings["mute_notifications"] = True
-                self.id_watch.save_settings_for_user(user_id, settings)
+
 
         self.id_watch.update_last_run_time()
         return list(new_exposes)
