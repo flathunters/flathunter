@@ -18,6 +18,7 @@ from flathunter import proxies
 from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
 from flathunter.logging import logger
 
+import subproccess
 
 class Crawler:
     """Defines the Crawler interface"""
