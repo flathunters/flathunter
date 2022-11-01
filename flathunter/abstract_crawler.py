@@ -55,8 +55,11 @@ class Crawler:
         if driver_arguments is not None:
             for driver_argument in driver_arguments:
                 chrome_options.add_argument(driver_argument)
-
-        driver = uc.Chrome(version_main=105, options=chrome_options) # pylint: disable=no-member
+        chrome_version = subprocess.Popen(['google-chrome', '--version'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True).stdout.readline().split(' '
+                )[2].split('.')[0]
+        driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
         driver.execute_cdp_cmd('Network.setBlockedURLs',
             {"urls": ["https://api.geetest.com/get.*"]})
