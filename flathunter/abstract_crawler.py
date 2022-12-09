@@ -8,7 +8,7 @@ import selenium
 from bs4 import BeautifulSoup
 from random_user_agent.params import HardwareType, Popularity
 from random_user_agent.user_agent import UserAgent
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
@@ -249,6 +249,9 @@ class Crawler:
             return iframe
         except NoSuchElementException:
             print("No iframe found, therefore no chaptcha verification necessary")
+            return None
+        except TimeoutException:
+            print("Timeout waiting for iframe element - no captcha verification necessary?")
             return None
 
     def _wait_until_iframe_disappears(self, driver: selenium.webdriver.Chrome):
