@@ -4,9 +4,9 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from google.cloud.firestore_v1.base_query import BaseQuery
 
 from flathunter.logging import logger
-from flathunter.config import Config
 from flathunter.exceptions import PersistenceException
 
 
@@ -89,7 +89,7 @@ class GoogleCloudIdMaintainer:
         """Returns the datetime of the last run"""
 
         docs = self.database.collection('executions').order_by(
-            'timestamp', direction=firestore.Query.DESCENDING).limit(1).stream()  # type: ignore
+            'timestamp', direction=BaseQuery.DESCENDING).limit(1).stream()  # type: ignore
         for doc in docs:
             return doc.to_dict()['timestamp']
 
