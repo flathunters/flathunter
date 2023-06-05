@@ -89,7 +89,7 @@ class GoogleCloudIdMaintainer:
         """Returns the datetime of the last run"""
 
         docs = self.database.collection('executions').order_by(
-            'timestamp', direction=BaseQuery.DESCENDING).limit(1).stream()  # type: ignore
+            'timestamp', direction=BaseQuery.DESCENDING).limit(1).stream()
         for doc in docs:
             return doc.to_dict()['timestamp']
 
