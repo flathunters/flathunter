@@ -31,7 +31,7 @@ def get_chrome_version():
             match = CHROME_VERSION_REGEXP.match(version)
             if match is None:
                 continue
-            return match.group(1).split('.')[0]
+            return int(match.group(1).split('.')[0])
         except FileNotFoundError:
             pass
     return None
@@ -44,7 +44,7 @@ def get_chrome_driver(driver_arguments):
         for driver_argument in driver_arguments:
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
-    driver = uc.Chrome(version_main=int(chrome_version), options=chrome_options) # pylint: disable=no-member
+    driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
     driver.execute_cdp_cmd('Network.setBlockedURLs',
         {"urls": ["https://api.geetest.com/get.*"]})
