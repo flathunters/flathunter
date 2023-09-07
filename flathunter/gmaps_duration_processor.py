@@ -2,10 +2,28 @@
 import datetime
 import time
 from urllib.parse import quote_plus
+from typing import Dict
+from dataclasses import dataclass
 import requests
 
 from flathunter.logging import logger
 from flathunter.abstract_processor import Processor
+
+
+@dataclass
+class TextValueTuple:
+    """We want to keep both what we parsed, and its numeric value."""
+    value: float
+    text: str
+
+
+@dataclass
+class DistanceElement:
+    """Represents the distance from a property to some location."""
+    duration: TextValueTuple
+    distance: TextValueTuple
+    mode: str
+
 
 class GMapsDurationProcessor(Processor):
     """Implementation of Processor class to calculate travel durations"""
@@ -19,26 +37,39 @@ class GMapsDurationProcessor(Processor):
 
     def process_expose(self, expose):
         """Calculate the durations for an expose"""
-        expose['durations'] = self.get_formatted_durations(expose['address']).strip()
+        durations = self.get_distances_and_durations(expose['address'])
+        expose['durations'] = self._format_durations(durations).strip()
+        expose['durations_unformatted'] = durations
         return expose
+
+    def get_distances_and_durations(self, address) -> Dict[str, DistanceElement]:
+        """Return a dict mapping location names to distances and durations"""
+        out = {}
+        for duration in self.config.get('durations', []):
+            if 'destination' not in duration or 'name' not in duration or 'modes' not in duration:
+                logger.warning('illegal duration configuration: %s', duration)
+                continue
+            dest = duration.get('destination')
+            name = duration.get('name')
+            for mode in duration.get('modes', []):
+                if 'gm_id' in mode and 'title' in mode \
+                                   and 'key' in self.config.get('google_maps_api', {}):
+                    duration = self.get_gmaps_distance(address, dest, mode['gm_id'])
+                    out[name] = duration
+        return out
 
     def get_formatted_durations(self, address):
         """Return a formatted list of GoogleMaps durations"""
+        durations = self.get_distances_and_durations(address)
+        return self._format_durations(durations)
+    
+    def _format_durations(self, durations: Dict[str, DistanceElement]):
         out = ""
-        for duration in self.config.get('durations', []):
-            if 'destination' in duration and 'name' in duration:
-                dest = duration.get('destination')
-                name = duration.get('name')
-                for mode in duration.get('modes', []):
-                    if 'gm_id' in mode and 'title' in mode \
-                                       and 'key' in self.config.get('google_maps_api', {}):
-                        duration = self.get_gmaps_distance(address, dest, mode['gm_id'])
-                        title = mode['title']
-                        out += f"> {name} ({title}): {duration}\n"
-
+        for location_name, val in durations.items():
+            out += f"> {location_name} ({val.mode}): {val.duration.text} ({val.distance.text})\n"
         return out.strip()
 
-    def get_gmaps_distance(self, address, dest, mode):
+    def _get_gmaps_distance(self, address, dest, mode) -> DistanceElement:
         """Get the distance"""
         # get timestamp for next monday at 9:00:00 o'clock
         now = datetime.datetime.today().replace(hour=9, minute=0, second=0)
@@ -82,7 +113,14 @@ class GMapsDurationProcessor(Processor):
                                    element['distance']['text'],
                                    element['duration']['text'],
                                    element['duration']['value'])
-                duration_text = element['duration']['text']
-                distance_text = element['distance']['text']
-                distances[element['duration']['value']] = f"{duration_text} ({distance_text})"
+                distance_element = DistanceElement(
+                    duration=TextValueTuple(
+                        float(element['duration']['value']),
+                        element['duration']['text']),
+                    distance=TextValueTuple(
+                        float(element['distance']['value']),
+                        element['distance']['text']),
+                    mode=mode
+                )
+                distances[distance_element.distance.value] = distance_element
         return distances[min(distances.keys())] if distances else None
