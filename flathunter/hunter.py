@@ -5,10 +5,11 @@ import requests
 
 from flathunter.logging import logger
 from flathunter.config import YamlConfig
-from flathunter.filter import Filter
+from flathunter.filter import FilterChain
 from flathunter.processor import ProcessorChain
 from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
 from flathunter.exceptions import ConfigException
+from flathunter.dataclasses import FilterChainName
 
 class Hunter:
     """Basic methods for crawling and processing / filtering exposes"""
@@ -38,16 +39,14 @@ class Hunter:
 
     def hunt_flats(self, max_pages=None):
         """Crawl, process and filter exposes"""
-        filter_set = Filter.builder() \
-                           .read_config(self.config) \
-                           .filter_already_seen(self.id_watch) \
-                           .build()
-
+        preprocess_filter_chain = self._build_preprocess_filter_chain(self.config)
+        postprocess_filter_chain = self._build_postprocess_filter_chain(self.config)
         processor_chain = ProcessorChain.builder(self.config) \
                                         .save_all_exposes(self.id_watch) \
-                                        .apply_filter(filter_set) \
+                                        .apply_filter(preprocess_filter_chain) \
                                         .resolve_addresses() \
                                         .calculate_durations() \
+                                        .apply_filter(postprocess_filter_chain) \
                                         .send_messages() \
                                         .build()
 
@@ -58,3 +57,14 @@ class Hunter:
             result.append(expose)
 
         return result
+    
+    def _build_preprocess_filter_chain(self, config) -> FilterChain:
+        return FilterChain.builder() \
+            .read_config(config, FilterChainName.preprocess) \
+            .filter_already_seen(self.id_watch) \
+            .build()
+    
+    def _build_postprocess_filter_chain(self, config) -> FilterChain:
+        return FilterChain.builder() \
+            .read_config(config, FilterChainName.postprocess) \
+            .build()

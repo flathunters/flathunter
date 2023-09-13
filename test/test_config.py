@@ -71,22 +71,20 @@ filters:
 
     def test_loads_config_from_string(self):
        config = StringConfig(string=self.EMPTY_FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
-       self.assertIsNotNone(my_filter)
+       target_urls = config.target_urls()
+       self.assertIsNotNone(target_urls)
 
     def test_loads_legacy_config_from_string(self):
        config = StringConfig(string=self.LEGACY_FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
+       my_filter = config.excluded_titles()
        self.assertIsNotNone(my_filter)
-       self.assertTrue(len(my_filter.filters) > 0)
+       self.assertTrue(len(my_filter) > 0)
 
     def test_loads_filters_config_from_string(self):
        config = StringConfig(string=self.FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
+       my_filter = config.excluded_titles()
        self.assertIsNotNone(my_filter)
+       self.assertTrue(len(my_filter) > 0)
 
     def test_defaults_fields(self):
        config = StringConfig(string=self.FILTERS_CONFIG)

@@ -1,6 +1,6 @@
 """Wrap configuration options as an object"""
 import os
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 
 import json
 import yaml
@@ -17,7 +17,8 @@ from flathunter.crawler.immowelt import Immowelt
 from flathunter.crawler.meinestadt import MeineStadt
 from flathunter.crawler.wggesucht import WgGesucht
 from flathunter.crawler.subito import Subito
-from flathunter.filter import Filter
+from flathunter.dataclasses import DistanceConfig
+from flathunter.gmaps_duration_processor import TransportationModes
 from flathunter.logging import logger
 from flathunter.exceptions import ConfigException
 
@@ -169,12 +170,6 @@ Preis: {price}
     def searchers(self):
         """Get the list of search plugins"""
         return self.__searchers__
-
-    def get_filter(self):
-        """Read the configured filter"""
-        builder = Filter.builder()
-        builder.read_config(self)
-        return builder.build()
 
     def captcha_enabled(self):
         """Check if captcha is configured"""
@@ -351,6 +346,23 @@ Preis: {price}
     def max_price_per_square(self):
         """Return the configured maximum price per square meter"""
         return self._get_filter_config("max_price_per_square")
+
+    def max_distance(self) -> List[DistanceConfig] | None:
+        """Return the configured maximum distance to locations."""
+        config = self._get_filter_config("max_distance")
+        if config is None:
+            return None
+        out = []
+        for distance_filter_item in config:
+            out.append(
+                DistanceConfig(
+                    location_name=distance_filter_item['location_name'],
+                    transport_mode=TransportationModes(distance_filter_item['transportation_mode']),
+                    max_distance_meters=distance_filter_item.get('max_distance_meters'),
+                    max_duration_seconds=distance_filter_item.get('max_duration_seconds')
+                )
+            )
+        return out
 
     def __repr__(self):
         return json.dumps({

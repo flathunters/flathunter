@@ -2,7 +2,6 @@
 from flathunter.config import YamlConfig
 from flathunter.logging import logger
 from flathunter.hunter import Hunter
-from flathunter.filter import Filter
 from flathunter.processor import ProcessorChain
 from flathunter.exceptions import BotBlockedException, UserDeactivatedException
 
@@ -13,17 +12,19 @@ class WebHunter(Hunter):
 
     def hunt_flats(self, max_pages=1):
         """Crawl all URLs, and send notifications to users of new flats"""
-        filter_set = Filter.builder() \
-                       .read_config(self.config) \
-                       .filter_already_seen(self.id_watch) \
-                       .build()
-
+        preprocess_filter_chain = self._build_preprocess_filter_chain(self.config)
+        postprocess_filter_chain = self._build_postprocess_filter_chain(self.config)
+        # note: we have to save all exposes *after* applying the processors because 
+        # the exposes later get loaded from disk to then be filtered again, so we need
+        # the additional information from the processor lest the postprocess chain breaks
+        # due to missing data
         processor_chain = ProcessorChain.builder(self.config) \
-                                        .apply_filter(filter_set) \
+                                        .apply_filter(preprocess_filter_chain) \
                                         .crawl_expose_details() \
-                                        .save_all_exposes(self.id_watch) \
                                         .resolve_addresses() \
                                         .calculate_durations() \
+                                        .save_all_exposes(self.id_watch) \
+                                        .apply_filter(postprocess_filter_chain) \
                                         .send_messages() \
                                         .build()
 
@@ -34,10 +35,12 @@ class WebHunter(Hunter):
         for (user_id, settings) in self.id_watch.get_user_settings():
             if 'mute_notifications' in settings:
                 continue
-            filter_set = Filter.builder().read_config(YamlConfig(settings)).build()
+            preprocess_filter_chain = self._build_preprocess_filter_chain(YamlConfig(settings))
+            postprocess_filter_chain = self._build_postprocess_filter_chain(YamlConfig(settings))
             try:
                 processor_chain = ProcessorChain.builder(self.config) \
-                                                .apply_filter(filter_set) \
+                                                .apply_filter(preprocess_filter_chain) \
+                                                .apply_filter(postprocess_filter_chain) \
                                                 .send_messages([user_id]) \
                                                 .build()
                 for message in processor_chain.process(new_exposes):

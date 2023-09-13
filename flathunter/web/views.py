@@ -6,10 +6,11 @@ from urllib import parse
 
 from flask import render_template, jsonify, request, session, redirect
 from flask_api import status
+from flathunter.dataclasses import FilterChainName
 
 from flathunter.web import app, log
 from flathunter.web.util import sanitize_float
-from flathunter.filter import FilterBuilder
+from flathunter.filter import FilterChainBuilder
 from flathunter.config import YamlConfig
 
 class AuthenticationError(Exception):
@@ -72,7 +73,10 @@ def filter_for_user():
     """Load the filter for the current user"""
     if filter_values_for_user() is None:
         return None
-    return FilterBuilder().read_config(YamlConfig({'filters': filter_values_for_user()})).build()
+    return (FilterChainBuilder()
+            .read_config(YamlConfig({'filters': filter_values_for_user()}), FilterChainName.preprocess)
+            .read_config(YamlConfig({'filters': filter_values_for_user()}), FilterChainName.postprocess)
+            .build())
 
 def form_filter_values():
     """Extract the filter settings from the submitted form"""
