@@ -17,7 +17,7 @@ loop:
 
 # List the URLs containing your filter properties below.
 # Currently supported services: www.immobilienscout24.de,
-# www.immowelt.de, www.wg-gesucht.de, and www.kleinanzeigen.de.
+# www.immowelt.de, www.wg-gesucht.de, www.kleinanzeigen.de, meinestadt.de and vrm-immo.de.
 # List the URLs in the following format:
 # urls:
 # 	- https://www.immobilienscout24.de/Suche/...
