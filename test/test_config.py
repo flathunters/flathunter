@@ -58,11 +58,16 @@ filters:
             os.remove("config.yaml")
 
     def test_loads_config_at_file(self):
-       with tempfile.NamedTemporaryFile(mode='w+') as temp:
-          temp.write(self.DUMMY_CONFIG)
-          temp.flush()
-          config = Config(temp.name) 
-       self.assertTrue(len(config.get('urls', [])) > 0, "Expected URLs in config file")
+       tempFileName = None
+       try:
+         with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp:
+            temp.write(self.DUMMY_CONFIG)
+            temp.flush()
+            tempFileName = temp.name
+         config = Config(tempFileName) 
+         self.assertTrue(len(config.get('urls', [])) > 0, "Expected URLs in config file")
+       finally:
+         os.unlink(tempFileName)
 
     def test_loads_config_from_string(self):
        config = StringConfig(string=self.EMPTY_FILTERS_CONFIG)
