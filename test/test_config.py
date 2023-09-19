@@ -67,7 +67,8 @@ filters:
          config = Config(tempFileName) 
          self.assertTrue(len(config.get('urls', [])) > 0, "Expected URLs in config file")
        finally:
-         os.unlink(tempFileName)
+         if tempFileName is not None:
+            os.unlink(tempFileName)
 
     def test_loads_config_from_string(self):
        config = StringConfig(string=self.EMPTY_FILTERS_CONFIG)

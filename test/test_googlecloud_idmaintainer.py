@@ -97,7 +97,7 @@ def test_exposes_are_returned_filtered(id_watch):
     hunter.hunt_flats()
     filter = (FilterChain
             .builder()
-            .read_config(StringConfig('{"filters":{"max_size":70}}'), FilterChainName.preprocess)
+            .read_config(StringConfig('{"filters":{"max_size":70}}'), FilterChainName.PREPROCESS)
             .build())
     saved = id_watch.get_recent_exposes(10, filter_set=filter)
     assert len(saved) == 10
