@@ -2,7 +2,7 @@
 import re
 import hashlib
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 from flathunter.logging import logger
 from flathunter.abstract_crawler import Crawler
@@ -29,7 +29,7 @@ class VrmImmo(Crawler):
             link = item.find("a", {"class": "js-item-title-link ci-search-result__link"})
             url = link.get("href")
             title = link.get("title")
-            logger.debug("Analyze " + url)
+            logger.debug("Analyze %s", url)
 
             try:
                 price = item.find("div", {"class": "item__spec item-spec-price"}).text

@@ -1,3 +1,7 @@
+"""
+This module contains dataclasses to help with serialisation and typechecking of data
+sent to and received from the Google Maps Distance API
+"""
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -58,6 +62,6 @@ class FilterChainName(Enum):
     Maps API, to make a decision on this expose.
     
     We separate the filter chains to avoid making expensive (literally!) calls to the
-    Google Maps API for exposes that we already know we aren't interested in anyway.""" 
-    preprocess = 'PREPROCESS'
-    postprocess = 'POSTPROCESS'
+    Google Maps API for exposes that we already know we aren't interested in anyway."""
+    PREPROCESS = 'PREPROCESS'
+    POSTPROCESS = 'POSTPROCESS'

@@ -14,7 +14,7 @@ class WebHunter(Hunter):
         """Crawl all URLs, and send notifications to users of new flats"""
         preprocess_filter_chain = self._build_preprocess_filter_chain(self.config)
         postprocess_filter_chain = self._build_postprocess_filter_chain(self.config)
-        # note: we have to save all exposes *after* applying the processors because 
+        # note: we have to save all exposes *after* applying the processors because
         # the exposes later get loaded from disk to then be filtered again, so we need
         # the additional information from the processor lest the postprocess chain breaks
         # due to missing data

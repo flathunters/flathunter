@@ -57,14 +57,14 @@ class Hunter:
             result.append(expose)
 
         return result
-    
+
     def _build_preprocess_filter_chain(self, config) -> FilterChain:
         return FilterChain.builder() \
-            .read_config(config, FilterChainName.preprocess) \
+            .read_config(config, FilterChainName.PREPROCESS) \
             .filter_already_seen(self.id_watch) \
             .build()
-    
+
     def _build_postprocess_filter_chain(self, config) -> FilterChain:
         return FilterChain.builder() \
-            .read_config(config, FilterChainName.postprocess) \
+            .read_config(config, FilterChainName.POSTPROCESS) \
             .build()

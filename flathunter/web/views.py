@@ -74,8 +74,10 @@ def filter_for_user():
     if filter_values_for_user() is None:
         return None
     return (FilterChainBuilder()
-            .read_config(YamlConfig({'filters': filter_values_for_user()}), FilterChainName.preprocess)
-            .read_config(YamlConfig({'filters': filter_values_for_user()}), FilterChainName.postprocess)
+            .read_config(
+                YamlConfig({'filters': filter_values_for_user()}), FilterChainName.PREPROCESS)
+            .read_config(
+                YamlConfig({'filters': filter_values_for_user()}), FilterChainName.POSTPROCESS)
             .build())
 
 def form_filter_values():

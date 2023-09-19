@@ -181,12 +181,12 @@ class DistanceFilter(AbstractFilter):
     
     This must be in the post-processing filter chain, as it requires data
     from the Google Maps API, which is not available right after scraping."""
-    
+
     distance_config: DistanceConfig
-    
+
     def __init__(self, distance_config: DistanceConfig):
         self.distance_config = distance_config
-    
+
     def is_interesting(self, expose):
         durations: Dict[str, DistanceElement] = expose.get('durations_unformatted', None)
         if durations is None or self.distance_config.location_name not in durations:
@@ -211,7 +211,7 @@ class FilterChainBuilder:
 
     def _append_filter_if_not_empty(
             self,
-            filter_class: ABCMeta, 
+            filter_class: ABCMeta,
             filter_config: Any):
         """Appends a filter to the list if its configuration is set"""
         if not filter_config:
@@ -220,7 +220,7 @@ class FilterChainBuilder:
 
     def read_config(self, config, filter_chain: FilterChainName):
         """Adds filters from a config dictionary"""
-        if filter_chain == FilterChainName.preprocess:
+        if filter_chain == FilterChainName.PREPROCESS:
             self._append_filter_if_not_empty(TitleFilter, config.excluded_titles())
             self._append_filter_if_not_empty(MinPriceFilter, config.min_price())
             self._append_filter_if_not_empty(MaxPriceFilter, config.max_price())
@@ -230,9 +230,9 @@ class FilterChainBuilder:
             self._append_filter_if_not_empty(MaxRoomsFilter, config.max_rooms())
             self._append_filter_if_not_empty(
                 PPSFilter, config.max_price_per_square())
-        elif filter_chain == FilterChainName.postprocess:
-            for df in config.max_distance():
-                self._append_filter_if_not_empty(DistanceFilter, df)
+        elif filter_chain == FilterChainName.POSTPROCESS:
+            for distance_filter in config.max_distance():
+                self._append_filter_if_not_empty(DistanceFilter, distance_filter)
         else:
             raise NotImplementedError()
         return self
@@ -261,7 +261,7 @@ class FilterChain:
             if not filter_.is_interesting(expose):
                 return False
         return True
-    
+
     def filter(self, exposes):
         """Apply all filters to every expose in the list"""
         return filter(self.is_interesting_expose, exposes)
@@ -270,4 +270,3 @@ class FilterChain:
     def builder():
         """Return a new filter chain builder"""
         return FilterChainBuilder()
-

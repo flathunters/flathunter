@@ -4,8 +4,11 @@ import time
 from urllib.parse import quote_plus
 from typing import Dict
 import requests
-from flathunter.dataclasses import DistanceElement, DistanceValueTuple, DurationValueTuple, TransportationModes
 
+from flathunter.dataclasses import (DistanceElement,
+    DistanceValueTuple,
+    DurationValueTuple,
+    TransportationModes)
 from flathunter.logging import logger
 from flathunter.abstract_processor import Processor
 
@@ -47,7 +50,8 @@ class GMapsDurationProcessor(Processor):
     def _format_durations(self, durations: Dict[str, DistanceElement]):
         out = ""
         for location_name, val in durations.items():
-            out += f"> {location_name} ({val.mode.value}): {val.duration.text} ({val.distance.text})\n"
+            out += f"> {location_name} ({val.mode.value}): " + \
+                    f"{val.duration.text} ({val.distance.text})\n"
         return out.strip()
 
     def _get_gmaps_distance(self, address, dest, mode) -> DistanceElement | None:
