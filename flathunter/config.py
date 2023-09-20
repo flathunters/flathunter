@@ -349,11 +349,11 @@ Preis: {price}
         """Return the configured maximum price per square meter"""
         return self._get_filter_config("max_price_per_square")
 
-    def max_distance(self) -> List[DistanceConfig] | None:
+    def max_distance(self) -> List[DistanceConfig]:
         """Return the configured maximum distance to locations."""
         config = self._get_filter_config("max_distance")
         if config is None:
-            return None
+            return []
         out = []
         for distance_filter_item in config:
             out.append(
