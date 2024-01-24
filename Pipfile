@@ -32,7 +32,8 @@ pyright = "*"
 types-beautifulsoup4 = "*"
 selenium = "*"
 gunicorn = "21.2.0"
-flask-api = {editable = true, ref = "bugfix/159/remove-werkzeug-deprecated-calls", git = "git+https://github.com/codders/flask-api.git"}
+flask-api = {editable = true, git = "git+https://github.com/flask-api/flask-api.git"}
+openai = "*"
 
 [dev-packages]
 

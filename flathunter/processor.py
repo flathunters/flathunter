@@ -11,6 +11,7 @@ from flathunter.sender_apprise import SenderApprise
 from flathunter.sender_telegram import SenderTelegram
 from flathunter.sender_slack import SenderSlack
 from flathunter.gmaps_duration_processor import GMapsDurationProcessor
+from flathunter.openai_processor import OpenAIProcessor
 from flathunter.idmaintainer import SaveAllExposesProcessor
 from flathunter.abstract_processor import Processor
 
@@ -46,6 +47,12 @@ class ProcessorChainBuilder:
                             and self.config["google_maps_api"]["enable"]
         if durations_enabled:
             self.processors.append(GMapsDurationProcessor(self.config))
+        return self
+
+    def generate_text(self):
+        """Add processor to generate text, if enabled"""
+        if self.config.openai_enabled():
+            self.processors.append(OpenAIProcessor(self.config))
         return self
 
     def crawl_expose_details(self):

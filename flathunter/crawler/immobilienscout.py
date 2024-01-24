@@ -180,12 +180,26 @@ class Immobilienscout(Crawler):
 
     def get_expose_details(self, expose):
         """Loads additional details for an expose by processing the expose detail URL"""
-        soup = self.get_soup_from_url(expose['url'])
+        driver = self.get_driver()
+        if driver is not None:
+            original_window = driver.current_window_handle
+            driver.switch_to.new_window('tab')
+        soup = self.get_soup_from_url(expose['url'], driver=driver)
         date = soup.find('dd', {"class": "is24qa-bezugsfrei-ab"})
+        description = soup.find('pre', {"class": "is24qa-objektbeschreibung"})
+        name_elems = soup.find_all(lambda e: e.has_attr('class') and len(e['class']) > 0 and 'realtorInfoNameAndRatingContainer' in e['class'][0])
+        # Get the first child of the 0th elem
+        name_elem = name_elems[0].findChildren()[0] if name_elems else None
+        name = name_elem.text.strip() if name_elem is not None else ''
+        expose['description'] = description.text.strip() if description is not None else ''
         expose['from'] = datetime.datetime.now().strftime("%2d.%2m.%Y")
+        expose['lessor'] = name
         if date is not None:
             if not re.match(r'.*sofort.*', date.text):
                 expose['from'] = date.text.strip()
+        if driver is not None:
+            driver.close()
+            driver.switch_to.window(original_window)
         return expose
 
     # pylint: disable=too-many-locals

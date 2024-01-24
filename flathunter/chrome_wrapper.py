@@ -66,7 +66,7 @@ def get_chrome_driver(driver_arguments):
     chrome_version = get_chrome_version()
     # something is weird with the patched driver version (maybe only in python3.11), I had to patch
     # the chrome options to make it work
-    setattr(chrome_options, "headless", True)
+    # setattr(chrome_options, "headless", True)
     driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
     driver.execute_cdp_cmd(

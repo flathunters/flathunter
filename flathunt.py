@@ -10,7 +10,7 @@ from datetime import time as dtime
 from flathunter.argument_parser import parse
 from flathunter.logging import logger, configure_logging
 from flathunter.idmaintainer import IdMaintainer
-from flathunter.hunter import Hunter
+from flathunter.detailed_hunter import OpenAIHunter
 from flathunter.config import Config
 from flathunter.heartbeat import Heartbeat
 from flathunter.time_utils import wait_during_period
@@ -31,7 +31,7 @@ def launch_flat_hunt(config, heartbeat: Heartbeat):
 
     wait_during_period(time_from, time_till)
 
-    hunter = Hunter(config, id_watch)
+    hunter = OpenAIHunter(config, id_watch)
     hunter.hunt_flats()
     counter = 0
 

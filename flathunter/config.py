@@ -66,6 +66,10 @@ class Env:
     FLATHUNTER_MATTERMOST_WEBHOOK_URL = _read_env(
         "FLATHUNTER_MATTERMOST_WEBHOOK_URL")
     FLATHUNTER_SLACK_WEBHOOK_URL = _read_env("FLATHUNTER_SLACK_WEBHOOK_URL")
+    FLATHUNTER_OPENAI_API_KEY = _read_env("FLATHUNTER_OPENAI_API_KEY")
+    FLATHUNTER_OPENAI_LANGUAGE = _read_env("FLATHUNTER_OPENAI_LANGUAGE")
+    FLATHUNTER_OPENAI_ENABLE = _read_env("FLATHUNTER_OPENAI_ENABLE")
+    FLATHUNTER_OPENAI_TEMPLATE = _read_env("FLATHUNTER_OPENAI_TEMPLATE")
 
     # Filters
     FLATHUNTER_FILTER_EXCLUDED_TITLES = _read_env(
@@ -274,6 +278,22 @@ Preis: {price}
         """Webhook for sending Slack messages"""
         return self._read_yaml_path('slack.webhook_url', "")
 
+    def openai_api_key(self):
+        """API Key for OpenAI"""
+        return self._read_yaml_path('openai.api_key', None)
+
+    def openai_language(self):
+        """Language to generate text in"""
+        return self._read_yaml_path('openai.language', "en")
+
+    def openai_enabled(self):
+        """True if OpenAI text generation is enabled"""
+        return bool(self._read_yaml_path('openai.enable', False))
+
+    def openai_template(self):
+        """Template for OpenAI text generation"""
+        return self._read_yaml_path('openai.template', "")
+
     def apprise_urls(self):
         """Notification URLs for Apprise"""
         return self._read_yaml_path('apprise', [])
@@ -366,6 +386,9 @@ Preis: {price}
             "slack_webhook_url": self.slack_webhook_url(),
             "telegram_receiver_ids": self.telegram_receiver_ids(),
             "telegram_bot_token": elide(self.telegram_bot_token()),
+            "openai_api_key": elide(self.openai_api_key()),
+            "openai_language": self.openai_language(),
+            "openai_enabled": self.openai_enabled(),
             "target_urls": self.target_urls(),
             "use_proxy": self.use_proxy(),
         })
@@ -513,6 +536,26 @@ class Config(CaptchaEnvironmentConfig):  # pylint: disable=too-many-public-metho
         if Env.FLATHUNTER_SLACK_WEBHOOK_URL is not None:
             return Env.FLATHUNTER_SLACK_WEBHOOK_URL
         return super().slack_webhook_url()
+
+    def openai_api_key(self) -> Optional[str]:
+        if Env.FLATHUNTER_OPENAI_API_KEY is not None:
+            return Env.FLATHUNTER_OPENAI_API_KEY
+        return super().openai_api_key()
+
+    def openai_language(self) -> str:
+        if Env.FLATHUNTER_OPENAI_LANGUAGE is not None:
+            return Env.FLATHUNTER_OPENAI_LANGUAGE
+        return super().openai_language()
+
+    def openai_enabled(self) -> bool:
+        if Env.FLATHUNTER_OPENAI_ENABLE is not None:
+            return str(Env.FLATHUNTER_OPENAI_ENABLE) == 'true'
+        return super().openai_enabled()
+
+    def openai_template(self) -> str:
+        if Env.FLATHUNTER_OPENAI_TEMPLATE is not None:
+            return Env.FLATHUNTER_OPENAI_TEMPLATE
+        return super().openai_template()
 
     def excluded_titles(self):
         if Env.FLATHUNTER_FILTER_EXCLUDED_TITLES is not None:
