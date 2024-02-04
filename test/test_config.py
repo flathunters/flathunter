@@ -58,30 +58,33 @@ filters:
             os.remove("config.yaml")
 
     def test_loads_config_at_file(self):
-       with tempfile.NamedTemporaryFile(mode='w+') as temp:
-          temp.write(self.DUMMY_CONFIG)
-          temp.flush()
-          config = Config(temp.name) 
-       self.assertTrue(len(config.get('urls', [])) > 0, "Expected URLs in config file")
+       tempFileName = None
+       try:
+         with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp:
+            temp.write(self.DUMMY_CONFIG)
+            temp.flush()
+            tempFileName = temp.name
+         config = Config(tempFileName) 
+         self.assertTrue(len(config.get('urls', [])) > 0, "Expected URLs in config file")
+       finally:
+         os.unlink(tempFileName)
 
     def test_loads_config_from_string(self):
        config = StringConfig(string=self.EMPTY_FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
-       self.assertIsNotNone(my_filter)
+       target_urls = config.target_urls()
+       self.assertIsNotNone(target_urls)
 
     def test_loads_legacy_config_from_string(self):
        config = StringConfig(string=self.LEGACY_FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
+       my_filter = config.excluded_titles()
        self.assertIsNotNone(my_filter)
-       self.assertTrue(len(my_filter.filters) > 0)
+       self.assertTrue(len(my_filter) > 0)
 
     def test_loads_filters_config_from_string(self):
        config = StringConfig(string=self.FILTERS_CONFIG)
-       self.assertIsNotNone(config)
-       my_filter = config.get_filter()
+       my_filter = config.excluded_titles()
        self.assertIsNotNone(my_filter)
+       self.assertTrue(len(my_filter) > 0)
 
     def test_defaults_fields(self):
        config = StringConfig(string=self.FILTERS_CONFIG)

@@ -7,7 +7,8 @@ from mockfirestore import MockFirestore
 from flathunter.googlecloud_idmaintainer import GoogleCloudIdMaintainer
 from flathunter.hunter import Hunter
 from flathunter.web_hunter import WebHunter
-from flathunter.filter import Filter
+from flathunter.filter import FilterChain
+from flathunter.dataclasses import FilterChainName
 from test.dummy_crawler import DummyCrawler
 from test.test_util import count
 from test.utils.config import StringConfig
@@ -94,7 +95,10 @@ def test_exposes_are_returned_filtered(id_watch):
     hunter = Hunter(config, id_watch)
     hunter.hunt_flats()
     hunter.hunt_flats()
-    filter = Filter.builder().read_config(StringConfig('{"filters":{"max_size":70}}')).build()
+    filter = (FilterChain
+            .builder()
+            .read_config(StringConfig('{"filters":{"max_size":70}}'), FilterChainName.preprocess)
+            .build())
     saved = id_watch.get_recent_exposes(10, filter_set=filter)
     assert len(saved) == 10
     for expose in saved:

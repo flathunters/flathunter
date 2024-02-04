@@ -1,8 +1,12 @@
 """Module with implementations of standard expose filters"""
-from functools import reduce
 import re
 from abc import ABC, ABCMeta
-from typing import List, Any
+from typing import List, Any, Dict
+
+from flathunter.config import DistanceConfig
+from flathunter.dataclasses import FilterChainName
+from flathunter.gmaps_duration_processor import DistanceElement
+from flathunter.logging import logger
 
 
 class AbstractFilter(ABC):
@@ -172,30 +176,65 @@ class PPSFilter(AbstractFilter):
         return pps <= self.max_pps
 
 
-class FilterBuilder:
+class DistanceFilter(AbstractFilter):
+    """Exclude properties based on distance or duration to a location
+    
+    This must be in the post-processing filter chain, as it requires data
+    from the Google Maps API, which is not available right after scraping."""
+    
+    distance_config: DistanceConfig
+    
+    def __init__(self, distance_config: DistanceConfig):
+        self.distance_config = distance_config
+    
+    def is_interesting(self, expose):
+        durations: Dict[str, DistanceElement] = expose.get('durations_unformatted', None)
+        if durations is None or self.distance_config.location_name not in durations:
+            logger.info('DurationFilter is enabled, but no GMaps data found. Skipping filter.')
+            return True
+        distance = durations[self.distance_config.location_name].distance.meters
+        duration = durations[self.distance_config.location_name].duration.seconds
+        out = True
+        if self.distance_config.max_distance_meters:
+            out &= distance < self.distance_config.max_distance_meters
+        if self.distance_config.max_duration_seconds:
+            out &= duration < self.distance_config.max_duration_seconds
+        return out
+
+
+class FilterChainBuilder:
     """Construct a filter chain"""
     filters: List[AbstractFilter]
 
     def __init__(self):
         self.filters = []
 
-    def _append_filter_if_not_empty(self, filter_class: ABCMeta, filter_config: Any):
+    def _append_filter_if_not_empty(
+            self,
+            filter_class: ABCMeta, 
+            filter_config: Any):
         """Appends a filter to the list if its configuration is set"""
         if not filter_config:
             return
         self.filters.append(filter_class(filter_config))
 
-    def read_config(self, config):
+    def read_config(self, config, filter_chain: FilterChainName):
         """Adds filters from a config dictionary"""
-        self._append_filter_if_not_empty(TitleFilter, config.excluded_titles())
-        self._append_filter_if_not_empty(MinPriceFilter, config.min_price())
-        self._append_filter_if_not_empty(MaxPriceFilter, config.max_price())
-        self._append_filter_if_not_empty(MinSizeFilter, config.min_size())
-        self._append_filter_if_not_empty(MaxSizeFilter, config.max_size())
-        self._append_filter_if_not_empty(MinRoomsFilter, config.min_rooms())
-        self._append_filter_if_not_empty(MaxRoomsFilter, config.max_rooms())
-        self._append_filter_if_not_empty(
-            PPSFilter, config.max_price_per_square())
+        if filter_chain == FilterChainName.preprocess:
+            self._append_filter_if_not_empty(TitleFilter, config.excluded_titles())
+            self._append_filter_if_not_empty(MinPriceFilter, config.min_price())
+            self._append_filter_if_not_empty(MaxPriceFilter, config.max_price())
+            self._append_filter_if_not_empty(MinSizeFilter, config.min_size())
+            self._append_filter_if_not_empty(MaxSizeFilter, config.max_size())
+            self._append_filter_if_not_empty(MinRoomsFilter, config.min_rooms())
+            self._append_filter_if_not_empty(MaxRoomsFilter, config.max_rooms())
+            self._append_filter_if_not_empty(
+                PPSFilter, config.max_price_per_square())
+        elif filter_chain == FilterChainName.postprocess:
+            for df in config.max_distance():
+                self._append_filter_if_not_empty(DistanceFilter, df)
+        else:
+            raise NotImplementedError()
         return self
 
     def filter_already_seen(self, id_watch):
@@ -204,12 +243,12 @@ class FilterBuilder:
         return self
 
     def build(self):
-        """Return the compiled filter"""
-        return Filter(self.filters)
+        """Return the compiled filter chain"""
+        return FilterChain(self.filters)
 
 
-class Filter:
-    """Abstract filter object"""
+class FilterChain:
+    """Collection of expose filters in use by a hunter instance"""
 
     filters: List[AbstractFilter]
 
@@ -218,14 +257,17 @@ class Filter:
 
     def is_interesting_expose(self, expose):
         """Apply all filters to this expose"""
-        return reduce((lambda x, y: x and y),
-                      map((lambda x: x.is_interesting(expose)), self.filters), True)
-
+        for filter_ in self.filters:
+            if not filter_.is_interesting(expose):
+                return False
+        return True
+    
     def filter(self, exposes):
         """Apply all filters to every expose in the list"""
         return filter(self.is_interesting_expose, exposes)
 
     @staticmethod
     def builder():
-        """Return a new filter builder"""
-        return FilterBuilder()
+        """Return a new filter chain builder"""
+        return FilterChainBuilder()
+
