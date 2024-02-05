@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "57496ffcf12df4ffcd58c1d0d73420f7f131487c52ec05c0f777d31b1933ff9b"
+            "sha256": "770b756ec2d528840f1748ca4932d69df3a5dd86f007e2c1b9eebb76a3a8d0dc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -359,12 +359,12 @@
         },
         "firebase-admin": {
             "hashes": [
-                "sha256:e3b334d18bbea039f2f3e8a792ad6870d2a7cc79a13ed10659dedd63f5b475e4",
-                "sha256:e3c42351fb6194d7279a6fd9209a947005fb4ee7e9037d19762e6cb3da4a82e1"
+                "sha256:4ac83ee00abe68498b9f08d701b550a77b3a59efba610a9e2fb3d7b1515166c6",
+                "sha256:aa06f19f0aa8b9b929dbe5cd13677c9ba05fe7ff819564f420aae02c645c6322"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==6.2.0"
+            "version": "==6.4.0"
         },
         "flask": {
             "hashes": [
