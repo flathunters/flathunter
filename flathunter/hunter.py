@@ -36,7 +36,7 @@ class Hunter:
                        for searcher in self.config.searchers()
                        for url in self.config.target_urls()])
 
-    def hunt_flats(self, max_pages=None):
+    def hunt_flats(self, max_pages: None|int = None):
         """Crawl, process and filter exposes"""
         filter_set = Filter.builder() \
                            .read_config(self.config) \

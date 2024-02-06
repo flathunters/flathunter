@@ -129,10 +129,12 @@ class Immobilienscout(Crawler):
 
     def get_entries_from_json(self, json):
         """Get entries from JSON"""
-        return [
+        entries = [
             self.extract_entry_from_javascript(entry.value)
                 for entry in self.JSON_PATH_PARSER_ENTRIES.find(json)
         ]
+        logger.debug('Number of found entries: %d', len(entries))
+        return entries
 
     def extract_entry_from_javascript(self, entry):
         """Get single entry from JavaScript"""

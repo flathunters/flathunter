@@ -12,7 +12,7 @@ coverage = "*"
 requests-mock = "*"
 Flask = ">=3"
 werkzeug = ">=3"
-firebase-admin = "*"
+firebase-admin = "6.2.0"
 mock-firestore = "*"
 pytest-mock = "*"
 pytest = "*"
@@ -28,11 +28,11 @@ python-dotenv = "*"
 undetected-chromedriver = "*"
 prompt-toolkit = "*"
 "ruamel.yaml" = "*"
-pyright = "*"
+pyright = "1.1.350"
 types-beautifulsoup4 = "*"
 selenium = "*"
 gunicorn = "21.2.0"
-flask-api = {editable = true, ref = "bugfix/159/remove-werkzeug-deprecated-calls", git = "git+https://github.com/codders/flask-api.git"}
+flask-api = {editable = true, ref = "develop", git = "git+https://github.com/flask-api/flask-api.git"}
 
 [dev-packages]
 

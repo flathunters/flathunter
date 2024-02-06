@@ -13,6 +13,8 @@ from flathunter.exceptions import ChromeNotFound
 CHROME_VERSION_REGEXP = re.compile(r'.* (\d+\.\d+\.\d+\.\d+)( .*)?')
 WINDOWS_CHROME_REG_PATH = r'HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon'
 WINDOWS_CHROME_REG_REGEXP = re.compile(r'\s*version\s*REG_SZ\s*(\d+)\..*')
+CHROME_BINARY_NAMES = ['google-chrome', 'chromium', 'chrome', 'chromium-browser',
+                       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']
 
 def get_command_output(args) -> List[str]:
     """Run a command and return stdout"""
@@ -28,8 +30,7 @@ def get_command_output(args) -> List[str]:
 
 def get_chrome_version() -> int:
     """Determine the correct name for the chrome binary"""
-    for binary_name in ['google-chrome', 'chromium', 'chrome',
-                        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']:
+    for binary_name in CHROME_BINARY_NAMES:
         try:
             version_output = get_command_output([binary_name, '--version'])
             if not version_output:
@@ -64,9 +65,7 @@ def get_chrome_driver(driver_arguments):
         for driver_argument in driver_arguments:
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
-    # something is weird with the patched driver version (maybe only in python3.11), I had to patch
-    # the chrome options to make it work
-    setattr(chrome_options, "headless", True)
+    chrome_options.add_argument("--headless=new")
     driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
     driver.execute_cdp_cmd(

@@ -5,7 +5,7 @@ import hashlib
 from urllib import parse
 
 from flask import render_template, jsonify, request, session, redirect
-from flask_api import status
+from flask_api import status # type: ignore
 
 from flathunter.web import app, log
 from flathunter.web.util import sanitize_float
