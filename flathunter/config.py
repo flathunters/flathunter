@@ -108,7 +108,12 @@ Preis: {price}
         self.config = config
         self.__searchers__ = []
         self.check_deprecated()
-        self.last_modified_time: Optional[float] = self.get_last_modified_time(self.config.get("filename"))
+        if filename := self.config.get("filename"):
+            self.last_modified_time: Optional[float] = self.get_last_modified_time(filename)
+        else:
+            self.last_modified_time: Optional[float] = None
+
+
 
     def __iter__(self):
         """Emulate dictionary"""

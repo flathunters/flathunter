@@ -86,7 +86,7 @@ def launch_flat_hunt(config, heartbeat: Heartbeat):
             if config_handle is not None:
                 new_config = Config(filename=config_handle.name, silent=True)
 
-                if None in (config.last_modified_time, new_config.last_modified_time):
+                if config.last_modified_time is None or new_config.last_modified_time is None:
                     logger.warning("Could not compare last modification time of config file."
                                  "Keeping the old configuration")
                 elif config.last_modified_time < new_config.last_modified_time:
