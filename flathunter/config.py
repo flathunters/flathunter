@@ -46,6 +46,8 @@ class Env:
     FLATHUNTER_VERBOSE_LOG = _read_env("FLATHUNTER_VERBOSE_LOG")
     FLATHUNTER_LOOP_PERIOD_SECONDS = _read_env(
         "FLATHUNTER_LOOP_PERIOD_SECONDS")
+    FLATHUNTER_LOOP_REFRESH_CONFIG = _read_env(
+        "FLATHUNTER_LOOP_REFRESH_CONFIG")
     FLATHUNTER_LOOP_PAUSE_FROM = _read_env("FLATHUNTER_LOOP_PAUSE_FROM")
     FLATHUNTER_LOOP_PAUSE_TILL = _read_env("FLATHUNTER_LOOP_PAUSE_TILL")
     FLATHUNTER_MESSAGE_FORMAT = _read_env("FLATHUNTER_MESSAGE_FORMAT")
@@ -106,6 +108,7 @@ Preis: {price}
         self.config = config
         self.__searchers__ = []
         self.check_deprecated()
+        self.last_modified_time: Optional[float] = self.get_last_modified_time(self.config.get("filename"))
 
     def __iter__(self):
         """Emulate dictionary"""
@@ -128,6 +131,14 @@ Preis: {price}
             MeineStadt(self),
             VrmImmo(self)
         ]
+
+    def get_last_modified_time(self, filename: str) -> Optional[float]:
+        """Gets the time the config file was last modified at the time of initialization"""
+        try:
+            return os.path.getmtime(filename)
+        except Exception as e:
+            logger.error(e)
+            return None
 
     def check_deprecated(self):
         """Notifies user of deprecated config items"""
@@ -208,6 +219,10 @@ Preis: {price}
     def loop_is_active(self):
         """Return true if flathunter should be crawling in a loop"""
         return self._read_yaml_path('loop.active', False)
+
+    def loop_refresh_config(self):
+        """Return true if flathunter should refresh the config for every loop"""
+        return self._read_yaml_path('loop.refresh_config', False)
 
     def loop_period_seconds(self):
         """Number of seconds to wait between crawls when looping"""
@@ -404,16 +419,18 @@ class Config(CaptchaEnvironmentConfig):  # pylint: disable=too-many-public-metho
     environment variable overrides
     """
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, silent=False):
         if filename is None and Env.FLATHUNTER_TARGET_URLS is None:
             raise ConfigException(
                 "Config file loaction must be specified, or FLATHUNTER_TARGET_URLS must be set")
         if filename is not None:
-            logger.info("Using config path %s", filename)
+            if not silent:
+                logger.info("Using config path %s", filename)
             if not os.path.exists(filename):
                 raise ConfigException("No config file found at location %s")
             with open(filename, encoding="utf-8") as file:
                 config = yaml.safe_load(file)
+                config["filename"] = filename
         else:
             config = {}
         super().__init__(config)
@@ -443,6 +460,11 @@ class Config(CaptchaEnvironmentConfig):  # pylint: disable=too-many-public-metho
         if Env.FLATHUNTER_LOOP_PERIOD_SECONDS is not None:
             return int(Env.FLATHUNTER_LOOP_PERIOD_SECONDS)
         return super().loop_period_seconds()
+
+    def loop_refresh_config(self):
+        if Env.FLATHUNTER_LOOP_REFRESH_CONFIG is not None:
+            return str(Env.FLATHUNTER_LOOP_REFRESH_CONFIG)
+        return super().loop_refresh_config()
 
     def loop_pause_from(self):
         if Env.FLATHUNTER_LOOP_PAUSE_FROM is not None:
