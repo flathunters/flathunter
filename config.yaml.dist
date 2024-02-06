@@ -10,6 +10,7 @@
 loop:
     active: yes
     sleeping_time: 600
+    refresh_config: no
 
 # Location of the Database to store already seen offerings
 # Defaults to the current directory
