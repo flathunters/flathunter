@@ -141,7 +141,7 @@ Preis: {price}
         """Gets the time the config file was last modified at the time of initialization"""
         try:
             return os.path.getmtime(filename)
-        except Exception as e:
+        except OSError as e:
             logger.error(e)
             return None
 
