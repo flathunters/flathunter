@@ -463,7 +463,7 @@ class Config(CaptchaEnvironmentConfig):  # pylint: disable=too-many-public-metho
 
     def loop_refresh_config(self):
         if Env.FLATHUNTER_LOOP_REFRESH_CONFIG is not None:
-            return str(Env.FLATHUNTER_LOOP_REFRESH_CONFIG)
+            return True
         return super().loop_refresh_config()
 
     def loop_pause_from(self):
