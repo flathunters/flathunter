@@ -271,6 +271,7 @@ To make deployment with docker easier, most of the important configuration optio
  - FLATHUNTER_GOOGLE_CLOUD_PROJECT_ID - the Google Cloud Project ID, for Google Cloud deployments
  - FLATHUNTER_VERBOSE_LOG - set to any value to enable verbose logging
  - FLATHUNTER_LOOP_PERIOD_SECONDS - a number in seconds for the crawling interval
+ - FLATHUNTER_LOOP_REFRESH_CONFIG - set to any value to enable live editing config file (refresh on each loop)
  - FLATHUNTER_MESSAGE_FORMAT - a format string for the notification messages, where `#CR#` will be replaced by newline
  - FLATHUNTER_NOTIFIERS - a comma-separated list of notifiers to enable (e.g. `telegram,mattermost,slack`)
  - FLATHUNTER_TELEGRAM_BOT_TOKEN - the token for the Telegram notifier
