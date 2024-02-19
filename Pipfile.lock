@@ -1260,12 +1260,12 @@
         },
         "selenium": {
             "hashes": [
-                "sha256:5aee79026c07985dc1b0c909f34084aa996dfe5b307602de9016d7a621a473f2",
-                "sha256:d43d6972e516855fb242ef9ce4ce759057b115070e702e7b1c1032fe7b38d87b"
+                "sha256:8912e690d4e72350ca733ad28be894e87683064de3304e5f5b5b386697a6c47d",
+                "sha256:d0ac1ab0aa50dffad8050e7f0170395ea23bcecccf7d59b69bc430e47eeb9dac"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==4.17.2"
+            "version": "==4.18.0"
         },
         "setuptools": {
             "hashes": [
@@ -1375,12 +1375,12 @@
                 "socks"
             ],
             "hashes": [
-                "sha256:051d961ad0c62a94e50ecf1af379c3aba230c66c710493493560c0c223c49f20",
-                "sha256:ce3711610ddce217e6d113a2732fafad960a03fd0318c91faa79481e35c11224"
+                "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d",
+                "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==2.2.0"
+            "version": "==2.2.1"
         },
         "wcwidth": {
             "hashes": [
