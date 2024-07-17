@@ -1412,12 +1412,12 @@
         },
         "types-beautifulsoup4": {
             "hashes": [
-                "sha256:000cdddb8aee4effb45a04be95654de8629fb8594a4f2f1231cff81108977324",
-                "sha256:e37e4cfa11b03b01775732e56d2c010cb24ee107786277bae6bc0fa3e305b686"
+                "sha256:004f6096fdd83b19cdbf6cb10e4eae57b10205eccc365d0a69d77da836012e28",
+                "sha256:7ceda66a93ba28d759d5046d7fec9f4cad2f563a77b3a789efc90bcadafeefd1"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==4.12.0.20240229"
+            "version": "==4.12.0.20240511"
         },
         "types-html5lib": {
             "hashes": [
