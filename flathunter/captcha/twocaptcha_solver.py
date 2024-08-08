@@ -12,6 +12,7 @@ from flathunter.captcha.captcha_solver import (
     CaptchaUnsolvableError,
     GeetestResponse,
     RecaptchaResponse,
+    AmazonResponse,
 )
 
 class TwoCaptchaSolver(CaptchaSolver):
@@ -46,6 +47,19 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
+    def solve_amazon(self, sitekey: str, iv: str, page_url: str, challenge_script= "", captcha_script = "", context = "") -> AmazonResponse:
+        logger.info("Trying to solve amazon.")
+        params = {
+            "key": self.api_key,
+            "method": "amazon_waf",
+            "sitekey": sitekey,
+            "pageurl": page_url,
+            "context": context,
+            "iv": iv
+
+        }
+        captcha_id = self.__submit_2captcha_request(params)
+        return AmazonResponse(self.__retrieve_2captcha_result(captcha_id))
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
     def __submit_2captcha_request(self, params: Dict[str, str]) -> str:

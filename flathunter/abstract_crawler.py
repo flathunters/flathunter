@@ -4,6 +4,9 @@ import re
 from time import sleep
 from typing import Optional, Any
 
+import zlib
+import json
+
 import backoff
 import requests
 # pylint: disable=unused-import
@@ -73,6 +76,8 @@ class Crawler(ABC):
             elif re.search("g-recaptcha", driver.page_source):
                 self.resolve_recaptcha(
                     driver, checkbox, afterlogin_string or "")
+            #elif "Warum haben wir deine Anfrage blockiert?" in driver.page_source:
+                #self.resolve_amazon(driver)
             return BeautifulSoup(driver.page_source, 'lxml')
 
         resp = requests.get(url, headers=self.HEADERS, timeout=30)
@@ -192,6 +197,79 @@ class Crawler(ABC):
         except CaptchaUnsolvableError:
             driver.refresh()
             raise
+
+    @backoff.on_exception(wait_gen=backoff.constant,
+                          exception=CaptchaUnsolvableError,
+                          max_tries=3)
+    def resolve_amazon(self, driver):
+        """Resolve Amazon Captcha"""
+        sleep(5)
+        try:
+            challenge = ""
+            captcha = ""
+            iv = ""
+            key = ""
+            context = ""
+            for r in driver.requests:
+                if "awswaf.com" in r.url:
+                    if "problem?" in r.url:
+                        res = r.response
+                        if res is None or res.status_code != 200:
+                            sleep(2)
+                            raise CaptchaUnsolvableError()
+                        deflated = zlib.decompress(res.body, 16+zlib.MAX_WBITS)
+                        decoded = deflated.decode("utf-8")
+                        data = json.loads(decoded)
+                        iv = data["state"]["iv"]
+                        key = data["key"]
+                        context = data["state"]["payload"]
+                    elif "jsapi.js" in r.url:
+                        captcha = r.url
+                    elif "challenge.js" in r.url:
+                        challenge = r.url
+
+            logger.info(f'\nKey: {key}\nIV: {iv}\nURL: {driver.current_url}\nChallange: {challenge}\nCaptcha: {captcha}\nContext: {context}')
+            captcha_response = self.captcha_solver.solve_amazon(
+                key,
+                iv,
+                driver.current_url,
+                challenge,
+                captcha,
+                context
+            )
+            logger.info(captcha_response)
+            cap_res = json.loads(captcha_response.result)
+            voucher = cap_res["captcha_voucher"]
+            existing_token = cap_res["existing_token"]
+            old_cookie = driver.get_cookie("aws-waf-token")
+            logger.info(f'current_token browser: {old_cookie["value"]}')
+            logger.info(f'existing_token 2captcha: {existing_token}')
+            old_cookie["value"] = existing_token
+            driver.delete_cookie("aws-waf-token")
+            driver.add_cookie(old_cookie)
+            sleep(3)
+            driver.execute_script(f'await ChallengeScript.submitCaptcha("{voucher}", "{existing_token}");')
+            sleep(3)
+            token = ""
+            for r in driver.requests:
+                if ("voucher" in r.url):
+                    res = r.response
+                    token = json.loads(res.body.decode("utf-8"))["token"]
+                    logger.info(f'New token: {token}')
+                    break
+            old_cookie = driver.get_cookie("aws-waf-token")
+            old_cookie["value"] = token
+            driver.delete_cookie("aws-waf-token")
+            driver.add_cookie(old_cookie)
+            sleep(3)
+            #driver.execute_script("AwsWafIntegration.saveReferrer();")
+            driver.execute_script(f'const res = await AwsWafIntegration.fetch("{driver.current_url}"); console.log("AWS RES: ", res)')
+            sleep(3)
+            #driver.refresh()
+            sleep(5)
+        except Exception as e:
+            driver.refresh()
+            raise CaptchaUnsolvableError()
 
     @backoff.on_exception(wait_gen=backoff.constant,
                           exception=CaptchaUnsolvableError,

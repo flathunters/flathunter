@@ -17,6 +17,9 @@ class RecaptchaResponse:
     """Response from reCAPTCHA"""
     result: str
 
+@dataclass
+class AmazonResponse:
+    result: str
 
 class CaptchaSolver:
     """Interface for Captcha solvers"""
@@ -36,6 +39,9 @@ class CaptchaSolver:
 
     def solve_recaptcha(self, google_site_key: str, page_url: str) -> RecaptchaResponse:
         """Should be implemented in subclass"""
+        raise NotImplementedError()
+
+    def solve_amazon(self, sitekey: str, iv: str, page_url: str,  challenge_script= "", captcha_script = "", context = "") -> AmazonResponse:
         raise NotImplementedError()
 
 class CaptchaUnsolvableError(Exception):

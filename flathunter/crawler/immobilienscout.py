@@ -116,6 +116,8 @@ class Immobilienscout(Crawler):
 
     def get_entries_from_javascript(self):
         """Get entries from JavaScript"""
+        if "Warum haben wir deine Anfrage blockiert?" in self.get_driver_force().page_source:
+            self.resolve_amazon(self.get_driver_force())
         try:
             result_json = self.get_driver_force().execute_script('return window.IS24.resultList;')
         except JavascriptException:
