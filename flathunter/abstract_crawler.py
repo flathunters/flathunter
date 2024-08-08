@@ -5,6 +5,9 @@ from time import sleep
 from typing import Optional, Any
 import json
 
+from io import BytesIO
+import base64
+
 import backoff
 import requests
 # pylint: disable=unused-import
@@ -13,10 +16,11 @@ import requests_random_user_agent
 from bs4 import BeautifulSoup
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver import Chrome
+from selenium.webdriver import Chrome, Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 from flathunter import proxies
 from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
@@ -196,6 +200,7 @@ class Crawler(ABC):
             driver.refresh()
             raise
 
+    # pylint: disable=too-many-locals
     @backoff.on_exception(wait_gen=backoff.constant,
                         exception=CaptchaUnsolvableError,
                         max_tries=3)
@@ -267,6 +272,62 @@ class Crawler(ABC):
         except CaptchaUnsolvableError:
             driver.refresh()
             raise
+
+    @backoff.on_exception(wait_gen=backoff.constant,
+                          exception=CaptchaUnsolvableError,
+                          max_tries=3)
+    def resolve_amazon(self, driver):
+        """Resolve Amazon Captcha"""
+        try:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            sleep(3)
+            shadowelement = driver.execute_script(
+                "return document.querySelector('awswaf-captcha').shadowRoot"
+            )
+            my_img = shadowelement.find_element(By.ID, "root")
+            size = my_img.size
+            select_l = my_img.find_element(By.TAG_NAME, "select")
+            select_l.click()
+            sleep(1)
+            select_l.send_keys(Keys.DOWN)
+            sleep(3)
+            shadowelement = driver.execute_script(
+                "return document.querySelector('awswaf-captcha').shadowRoot"
+            )
+            my_img = shadowelement.find_element(By.ID, "root")
+            screenshot = my_img.screenshot_as_png
+            screenshot_bytes = BytesIO(screenshot)
+            base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
+            # Send image in 2captcha service
+            result = self.captcha_solver.solve_amazon(base64_screenshot)
+            logger.info(result.token)
+            l = result.token.split(':')[1].split(';')
+            l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
+            button_coord = [size['width'] - 30, size['height'] - 30]
+            l.append(button_coord)
+            actions = ActionChains(driver)
+            for i in l:
+                actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
+                actions.perform()
+                sleep(0.5)
+                actions.reset_actions()
+            sleep(1)
+            try:
+                confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
+                actions.move_to_element_with_offset(confirm_button, 40, 15).click()
+                actions.perform()
+                sleep(4)
+            except NoSuchElementException:
+                pass
+            try:
+                driver.find_element(By.TAG_NAME, "awswaf-captcha")
+            except NoSuchElementException:
+                logger.info("Captcha solved")
+            else:
+                raise CaptchaUnsolvableError()
+        except Exception as ex:
+            driver.refresh()
+            raise CaptchaUnsolvableError() from ex
 
     @backoff.on_exception(wait_gen=backoff.constant,
                           exception=CaptchaUnsolvableError,

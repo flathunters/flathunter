@@ -1,5 +1,4 @@
 """Captcha solver for CapMonster Captcha Solving Service (https://capmonster.cloud)"""
-import json
 from typing import Dict
 from time import sleep
 import backoff
@@ -8,8 +7,6 @@ import requests
 from flathunter.logging import logger
 from flathunter.captcha.captcha_solver import (
     CaptchaSolver,
-    CaptchaBalanceEmpty,
-    CaptchaUnsolvableError,
     GeetestResponse,
     AwsAwfResponse,
     RecaptchaResponse,
@@ -26,6 +23,8 @@ class CapmonsterSolver(CaptchaSolver):
         """Should be implemented in subclass"""
         raise NotImplementedError("Recaptcha captcha solving is not implemented for Capmonster")
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def solve_awswaf(
         self,
         sitekey: str,

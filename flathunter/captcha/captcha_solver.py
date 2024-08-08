@@ -22,7 +22,6 @@ class AwsAwfResponse:
     """Response from AWS WAF"""
     token: str
 
-
 class CaptchaSolver:
     """Interface for Captcha solvers"""
 
@@ -39,6 +38,8 @@ class CaptchaSolver:
         """Should be implemented in subclass"""
         raise NotImplementedError()
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def solve_awswaf(
         self,
         sitekey: str,

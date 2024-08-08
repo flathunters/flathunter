@@ -11,7 +11,6 @@ from selenium.webdriver import Chrome
 from flathunter.abstract_crawler import Crawler
 from flathunter.logging import logger
 from flathunter.chrome_wrapper import get_chrome_driver
-from flathunter.captcha.twocaptcha_solver import TwoCaptchaSolver
 from flathunter.exceptions import DriverLoadException
 
 STATIC_URL_PATTERN = re.compile(r'https://www\.immobilienscout24\.de')
@@ -35,7 +34,7 @@ class Immobilienscout(Crawler):
 
     URL_PATTERN = STATIC_URL_PATTERN
 
-    JSON_PATH_PARSER_ENTRIES = parse("$..['resultlist.realEstate']")
+    JSON_PATH_PARSER_ENTRIES = parse("$..['resultlistEntries']..['resultlist.realEstate']")
     JSON_PATH_PARSER_IMAGES = parse("$..galleryAttachments"
                                     "..attachment[?'@xsi.type'=='common:Picture']"
                                     "..['@href'].`sub(/(.*\\\\.jpe?g).*/, \\\\1)`")
@@ -117,6 +116,8 @@ class Immobilienscout(Crawler):
 
     def get_entries_from_javascript(self):
         """Get entries from JavaScript"""
+        if "Warum haben wir deine Anfrage blockiert?" in self.get_driver_force().page_source:
+            self.resolve_amazon(self.get_driver_force())
         try:
             result_json = self.get_driver_force().execute_script('return window.IS24.resultList;')
         except JavascriptException:

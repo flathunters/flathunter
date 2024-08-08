@@ -24,6 +24,8 @@ class GMapsDurationProcessor(Processor):
 
     def get_formatted_durations(self, address):
         """Return a formatted list of GoogleMaps durations"""
+        if address is None:
+            return ""
         out = ""
         for duration in self.config.get('durations', []):
             if 'destination' in duration and 'name' in duration:

@@ -4,6 +4,7 @@ from typing import Dict
 from time import sleep
 import backoff
 import requests
+from twocaptcha import TwoCaptcha
 
 from flathunter.logging import logger
 from flathunter.captcha.captcha_solver import (
@@ -47,6 +48,8 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def solve_awswaf(
         self,
         sitekey: str,
@@ -56,8 +59,19 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_script: str,
         page_url: str
     ) -> AwsAwfResponse:
-        """Should be implemented at some point"""
-        raise NotImplementedError("AWS WAF captchas not supported for 2Captcha")
+        """Using the `solve_amazon` method instead"""
+        raise NotImplementedError()
+
+    def solve_amazon(
+        self,
+        image_b64: str
+    ) -> AwsAwfResponse:
+        """Solve AWS WAF by processing an image"""
+        solver = TwoCaptcha(self.api_key, defaultTimeout=60, pollingInterval=5)
+        result = solver.coordinates(image_b64, lang='en')
+        if result is None:
+            raise CaptchaUnsolvableError("Got None from 2captcha solve")
+        return AwsAwfResponse(result["code"])
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
     def __submit_2captcha_request(self, params: Dict[str, str]) -> str:
