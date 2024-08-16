@@ -124,6 +124,7 @@ class Immobilienscout(Crawler):
                 logger.error(
                     "IS24 bot detection has identified our script as a bot - we've been blocked"
                 )
+                logger.info(self.get_driver_force().page_source)
             return []
         return self.get_entries_from_json(result_json)
 
