@@ -11,6 +11,7 @@ from flathunter.captcha.captcha_solver import (
     CaptchaBalanceEmpty,
     CaptchaUnsolvableError,
     GeetestResponse,
+    AwsAwfResponse,
     RecaptchaResponse,
 )
 
@@ -51,7 +52,7 @@ class TwoCaptchaSolver(CaptchaSolver):
     def __submit_2captcha_request(self, params: Dict[str, str]) -> str:
         submit_url = "http://2captcha.com/in.php"
         submit_response = requests.post(submit_url, params=params, timeout=30)
-        logger.debug("Got response from 2captcha/in: %s", submit_response.text)
+        logger.info("Got response from 2captcha/in: %s", submit_response.text)
 
         if not submit_response.text.startswith("OK"):
             raise requests.HTTPError(response=submit_response)
@@ -66,6 +67,7 @@ class TwoCaptchaSolver(CaptchaSolver):
             "key": self.api_key,
             "action": "get",
             "id": captcha_id,
+            "json": 0,
         }
         while True:
             retrieve_response = requests.get(retrieve_url, params=params, timeout=30)

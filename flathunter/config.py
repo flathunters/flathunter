@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from flathunter.captcha.captcha_solver import CaptchaSolver
 from flathunter.captcha.imagetyperz_solver import ImageTyperzSolver
 from flathunter.captcha.twocaptcha_solver import TwoCaptchaSolver
+from flathunter.captcha.capmonster_solver import CapmonsterSolver
 from flathunter.crawler.kleinanzeigen import Kleinanzeigen
 from flathunter.crawler.idealista import Idealista
 from flathunter.crawler.immobiliare import Immobiliare
@@ -36,6 +37,7 @@ class Env:
     # Captcha setup
     FLATHUNTER_2CAPTCHA_KEY = _read_env("FLATHUNTER_2CAPTCHA_KEY")
     FLATHUNTER_IMAGETYPERZ_TOKEN = _read_env("FLATHUNTER_IMAGETYPERZ_TOKEN")
+    FLATHUNTER_CAPMONSTER_KEY = _read_env("FLATHUNTER_CAPMONSTER_KEY")
     FLATHUNTER_HEADLESS_BROWSER = _read_env("FLATHUNTER_HEADLESS_BROWSER")
     FLATHUNTER_IS24_COOKIE = _read_env("FLATHUNTER_IS24_COOKIE")
 
@@ -300,6 +302,10 @@ Preis: {price}
     def get_twocaptcha_key(self) -> str:
         """API Token for 2captcha"""
         return self._read_yaml_path("captcha.2captcha.api_key", "")
+    
+    def get_capmonster_key(self) -> str:
+        """API Token for Capmonster"""
+        return self._read_yaml_path("captcha.capmonster.api_key", "")
 
     def _get_captcha_solver(self) -> Optional[CaptchaSolver]:
         """Get configured captcha solver"""
@@ -310,6 +316,10 @@ Preis: {price}
         twocaptcha_api_key = self.get_twocaptcha_key()
         if twocaptcha_api_key:
             return TwoCaptchaSolver(twocaptcha_api_key)
+        
+        capmonster_api_key = self.get_capmonster_key()
+        if capmonster_api_key:
+            return CapmonsterSolver(capmonster_api_key)
 
         return None
 
@@ -399,6 +409,10 @@ class CaptchaEnvironmentConfig(YamlConfig):
     def get_twocaptcha_key(self) -> str:
         """Return the currently configured 2captcha API key"""
         return Env.FLATHUNTER_2CAPTCHA_KEY() or super().get_twocaptcha_key()  # pylint: disable=no-member
+    
+    def get_capmonster_key(self) -> str:
+        """Return the currently configured Capmonster API key"""
+        return Env.FLATHUNTER_CAPMONSTER_KEY() or super().get_capmonster_key()
 
     def captcha_driver_arguments(self):
         """The list of driver arguments for Selenium / Webdriver"""
