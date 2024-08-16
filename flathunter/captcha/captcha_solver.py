@@ -17,6 +17,11 @@ class RecaptchaResponse:
     """Response from reCAPTCHA"""
     result: str
 
+@dataclass
+class AwsAwfResponse:
+    """Response from AWS WAF"""
+    token: str
+
 
 class CaptchaSolver:
     """Interface for Captcha solvers"""
@@ -31,6 +36,10 @@ class CaptchaSolver:
         self.api_key = api_key
 
     def solve_geetest(self, geetest: str, challenge: str, page_url: str) -> GeetestResponse:
+        """Should be implemented in subclass"""
+        raise NotImplementedError()
+    
+    def solve_awswaf(self, sitekey: str, iv: str, context: str, page_url: str) -> AwsAwfResponse:
         """Should be implemented in subclass"""
         raise NotImplementedError()
 

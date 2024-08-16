@@ -3,6 +3,7 @@ from abc import ABC
 import re
 from time import sleep
 from typing import Optional, Any
+import json
 
 import backoff
 import requests
@@ -70,6 +71,8 @@ class Crawler(ABC):
             driver.get(url)
             if re.search("initGeetest", driver.page_source):
                 self.resolve_geetest(driver)
+            elif re.search("awswaf-captcha", driver.page_source):
+                self.resolve_awsawf(driver)
             elif re.search("g-recaptcha", driver.page_source):
                 self.resolve_recaptcha(
                     driver, checkbox, afterlogin_string or "")
@@ -189,6 +192,71 @@ class Crawler(ABC):
                       f'data: "{data}"}});')
             driver.execute_script(script)
             sleep(2)
+        except CaptchaUnsolvableError:
+            driver.refresh()
+            raise
+
+    @backoff.on_exception(wait_gen=backoff.constant,
+                        exception=CaptchaUnsolvableError,
+                        max_tries=3)
+    def resolve_awsawf(self, driver):
+        """Resolve AWS WAF Captcha"""
+
+        # Intercept background network traffic via log sniffing
+        sleep(2)
+        logs_raw = driver.get_log("performance")
+        logs = [json.loads(lr["message"])["message"] for lr in logs_raw]
+        
+        def log_filter(log_):
+            return (
+                # is an actual response
+                log_["method"] == "Network.responseReceived"
+                # and json
+                and "json" in log_["params"]["response"]["mimeType"]
+            )
+        
+        for log in filter(log_filter, logs):
+            request_id = log["params"]["requestId"]
+            resp_url = log["params"]["response"]["url"]
+            if "problem" in resp_url and "awswaf" in resp_url:
+                response = driver.execute_cdp_cmd("Network.getResponseBody", {"requestId": request_id})
+                response_json = json.loads(response["body"])
+                iv = response_json["state"]["iv"]
+                context = response_json["state"]["payload"]
+                sitekey = response_json["key"]
+
+
+        sitekey = re.findall(
+            r"apiKey: \"(.*?)\"", driver.page_source)[0]
+
+        patternChallenge = r'src="([^"]*challenge\.js)"'
+        challenge_matches = re.findall(patternChallenge, driver.page_source)
+        for match in challenge_matches:
+            print(f'Challenge SRC Value: {match}')   
+            challenge = match
+
+        patternJsApi = r'src="([^"]*jsapi\.js)"'
+        jsapi_matches = re.findall(patternJsApi, driver.page_source)
+        for match in jsapi_matches:
+            print(f'JsApi SRC Value: {match}')   
+            jsapi = match
+
+        try:
+            captcha = self.captcha_solver.solve_awswaf(
+                sitekey,
+                iv,
+                context,
+                challenge,
+                jsapi,
+                driver.current_url
+            )
+            old_cookie = driver.get_cookie('aws-waf-token')
+            new_cookie = old_cookie
+            new_cookie['value'] = captcha.token
+            driver.delete_cookie('aws-waf-token')
+            driver.add_cookie(new_cookie)
+            sleep(1)
+            driver.refresh()
         except CaptchaUnsolvableError:
             driver.refresh()
             raise
