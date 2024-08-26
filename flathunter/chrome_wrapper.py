@@ -3,7 +3,6 @@ binary is, to attach the correct selenium chromedriver, and to set
 the correct version number"""
 import re
 import subprocess
-import logging
 from typing import List
 from sys import platform
 import undetected_chromedriver as uc

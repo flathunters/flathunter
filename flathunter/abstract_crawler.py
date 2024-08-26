@@ -4,8 +4,6 @@ import re
 from time import sleep
 from typing import Optional, Any
 
-import zlib
-import json
 from io import BytesIO
 import base64
 
