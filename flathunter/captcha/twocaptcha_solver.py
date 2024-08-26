@@ -13,7 +13,6 @@ from flathunter.captcha.captcha_solver import (
     CaptchaUnsolvableError,
     GeetestResponse,
     RecaptchaResponse,
-    AmazonResponse,
 )
 
 class TwoCaptchaSolver(CaptchaSolver):

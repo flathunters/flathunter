@@ -37,7 +37,7 @@ class CaptchaSolver:
         """Should be implemented in subclass"""
         raise NotImplementedError()
 
-    def solve_amazon(self, image) -> AmazonResponse:
+    def solve_amazon(self, image):
         raise NotImplementedError()
 
 class CaptchaUnsolvableError(Exception):

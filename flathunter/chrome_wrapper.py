@@ -66,8 +66,8 @@ def get_chrome_driver(driver_arguments):
         for driver_argument in driver_arguments:
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
-    #chrome_options.add_argument("--headless=new")
-    driver = uc.Chrome(version_main=chrome_version, options=chrome_options, seleniumwire_options={}) # pylint: disable=no-member
+    chrome_options.add_argument("--headless=new")
+    driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
     driver.execute_cdp_cmd(
         "Network.setUserAgentOverride",

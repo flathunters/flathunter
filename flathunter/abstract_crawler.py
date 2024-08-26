@@ -79,8 +79,6 @@ class Crawler(ABC):
             elif re.search("g-recaptcha", driver.page_source):
                 self.resolve_recaptcha(
                     driver, checkbox, afterlogin_string or "")
-            #elif "Warum haben wir deine Anfrage blockiert?" in driver.page_source:
-                #self.resolve_amazon(driver)
             return BeautifulSoup(driver.page_source, 'lxml')
 
         resp = requests.get(url, headers=self.HEADERS, timeout=30)
@@ -207,49 +205,44 @@ class Crawler(ABC):
     def resolve_amazon(self, driver):
         """Resolve Amazon Captcha"""
         try:
-            count_attempt = 0
-            while True:
-                try:
-                    driver.find_element(By.TAG_NAME, "awswaf-captcha")
-                except:
-                    break
-                else:
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    sleep(1)
-                    shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
-                    my_img = shadowelement.find_element(By.ID, "root")
-                    count_attempt += 1
-                    size = my_img.size
-                    if count_attempt == 1:
-                        select_l = my_img.find_element(By.TAG_NAME, "select")
-                        select_l.click()
-                        sleep(1)
-                        select_l.send_keys(Keys.DOWN)
-                        sleep(3)
-                        shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
-                        my_img = shadowelement.find_element(By.ID, "root")
-                    screenshot = my_img.screenshot_as_png
-                    screenshot_bytes = BytesIO(screenshot)
-                    base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
-                    logger.info("Solving coordinate captcha...")
-                    result = self.captcha_solver.solve_amazon(base64_screenshot)  # Send image in 2captcha service
-                    logger.debug(result['code'])
-                    l = result['code'].split(':')[1].split(';')
-                    l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
-                    button_coord = [size['width'] - 30, size['height'] - 30]
-                    l.append(button_coord)
-                    actions = ActionChains(driver)
-                    for i in l:
-                        actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
-                        actions.perform()
-                        sleep(0.5)
-                        actions.reset_actions()
-                    sleep(1)
-                    confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
-                    actions.move_to_element_with_offset(confirm_button, 40, 15).click()
-                    actions.perform()
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            sleep(1)
+            shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
+            my_img = shadowelement.find_element(By.ID, "root")
+            size = my_img.size
+            select_l = my_img.find_element(By.TAG_NAME, "select")
+            select_l.click()
+            sleep(1)
+            select_l.send_keys(Keys.DOWN)
+            sleep(3)
+            shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
+            my_img = shadowelement.find_element(By.ID, "root")
+            screenshot = my_img.screenshot_as_png
+            screenshot_bytes = BytesIO(screenshot)
+            base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
+            result = self.captcha_solver.solve_amazon(base64_screenshot)  # Send image in 2captcha service
+            logger.info(result['code'])
+            l = result['code'].split(':')[1].split(';')
+            l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
+            button_coord = [size['width'] - 30, size['height'] - 30]
+            l.append(button_coord)
+            actions = ActionChains(driver)
+            for i in l:
+                actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
+                actions.perform()
+                sleep(0.5)
+                actions.reset_actions()
+            sleep(1)
+            confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
+            actions.move_to_element_with_offset(confirm_button, 40, 15).click()
+            actions.perform()
+            sleep(2)
+            try:
+                driver.find_element(By.TAG_NAME, "awswaf-captcha")
+                raise CaptchaUnsolvableError()
+            except:
+                logger.info("Captcha solved")
         except Exception as ex:
-            print(ex)
             driver.refresh()
             raise CaptchaUnsolvableError()
 
