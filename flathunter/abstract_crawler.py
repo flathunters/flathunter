@@ -237,9 +237,10 @@ class Crawler(ABC):
             sleep(2)
             try:
                 driver.find_element(By.TAG_NAME, "awswaf-captcha")
-                raise CaptchaUnsolvableError()
             except:
                 logger.info("Captcha solved")
+            else:
+                raise CaptchaUnsolvableError()
         except Exception as ex:
             driver.refresh()
             raise CaptchaUnsolvableError()
