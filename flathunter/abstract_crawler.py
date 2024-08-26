@@ -228,16 +228,12 @@ class Crawler(ABC):
                         sleep(3)
                         shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
                         my_img = shadowelement.find_element(By.ID, "root")
-                    # print("SIZE: ", size)
                     screenshot = my_img.screenshot_as_png
                     screenshot_bytes = BytesIO(screenshot)
-                    # with open('screenshot.png', 'wb') as file:
-                    #     file.write(screenshot_bytes.getvalue())
-                    print("Count attempts:", count_attempt)
                     base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
-                    print("Solve captcha...")
+                    logger.info("Solving coordinate captcha...")
                     result = self.captcha_solver.solve_amazon(base64_screenshot)  # Send image in 2captcha service
-                    print(result['code'])
+                    logger.debug(result['code'])
                     l = result['code'].split(':')[1].split(';')
                     l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
                     button_coord = [size['width'] - 30, size['height'] - 30]
