@@ -34,7 +34,7 @@ class Immobilienscout(Crawler):
 
     URL_PATTERN = STATIC_URL_PATTERN
 
-    JSON_PATH_PARSER_ENTRIES = parse("$..['resultlist.realEstate']")
+    JSON_PATH_PARSER_ENTRIES = parse("$..['resultlistEntries']..['resultlist.realEstate']")
     JSON_PATH_PARSER_IMAGES = parse("$..galleryAttachments"
                                     "..attachment[?'@xsi.type'=='common:Picture']"
                                     "..['@href'].`sub(/(.*\\\\.jpe?g).*/, \\\\1)`")
