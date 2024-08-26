@@ -7,7 +7,6 @@ import logging
 from typing import List
 from sys import platform
 import undetected_chromedriver as uc
-from seleniumwire.undetected_chromedriver.webdriver import Chrome
 
 from flathunter.logging import logger
 from flathunter.exceptions import ChromeNotFound
@@ -68,9 +67,7 @@ def get_chrome_driver(driver_arguments):
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
     #chrome_options.add_argument("--headless=new")
-    selenium_logger = logging.getLogger('seleniumwire')
-    selenium_logger.setLevel(logging.ERROR)
-    driver = Chrome(version_main=chrome_version, options=chrome_options, seleniumwire_options={}) # pylint: disable=no-member
+    driver = uc.Chrome(version_main=chrome_version, options=chrome_options, seleniumwire_options={}) # pylint: disable=no-member
 
     driver.execute_cdp_cmd(
         "Network.setUserAgentOverride",

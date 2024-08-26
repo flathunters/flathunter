@@ -6,6 +6,8 @@ from typing import Optional, Any
 
 import zlib
 import json
+from io import BytesIO
+import base64
 
 import backoff
 import requests
@@ -15,10 +17,11 @@ import requests_random_user_agent
 from bs4 import BeautifulSoup
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver import Chrome
+from selenium.webdriver import Chrome, Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 from flathunter import proxies
 from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
@@ -203,71 +206,54 @@ class Crawler(ABC):
                           max_tries=3)
     def resolve_amazon(self, driver):
         """Resolve Amazon Captcha"""
-        sleep(5)
         try:
-            challenge = ""
-            captcha = ""
-            iv = ""
-            key = ""
-            context = ""
-            for r in driver.requests:
-                if "awswaf.com" in r.url:
-                    if "problem?" in r.url:
-                        res = r.response
-                        if res is None or res.status_code != 200:
-                            sleep(2)
-                            raise CaptchaUnsolvableError()
-                        deflated = zlib.decompress(res.body, 16+zlib.MAX_WBITS)
-                        decoded = deflated.decode("utf-8")
-                        data = json.loads(decoded)
-                        iv = data["state"]["iv"]
-                        key = data["key"]
-                        context = data["state"]["payload"]
-                    elif "jsapi.js" in r.url:
-                        captcha = r.url
-                    elif "challenge.js" in r.url:
-                        challenge = r.url
-
-            logger.info(f'\nKey: {key}\nIV: {iv}\nURL: {driver.current_url}\nChallange: {challenge}\nCaptcha: {captcha}\nContext: {context}')
-            captcha_response = self.captcha_solver.solve_amazon(
-                key,
-                iv,
-                driver.current_url,
-                challenge,
-                captcha,
-                context
-            )
-            logger.info(captcha_response)
-            cap_res = json.loads(captcha_response.result)
-            voucher = cap_res["captcha_voucher"]
-            existing_token = cap_res["existing_token"]
-            old_cookie = driver.get_cookie("aws-waf-token")
-            logger.info(f'current_token browser: {old_cookie["value"]}')
-            logger.info(f'existing_token 2captcha: {existing_token}')
-            old_cookie["value"] = existing_token
-            driver.delete_cookie("aws-waf-token")
-            driver.add_cookie(old_cookie)
-            sleep(3)
-            driver.execute_script(f'await ChallengeScript.submitCaptcha("{voucher}", "{existing_token}");')
-            sleep(3)
-            token = ""
-            for r in driver.requests:
-                if ("voucher" in r.url):
-                    res = r.response
-                    token = json.loads(res.body.decode("utf-8"))["token"]
-                    logger.info(f'New token: {token}')
+            count_attempt = 0
+            while True:
+                try:
+                    driver.find_element(By.TAG_NAME, "awswaf-captcha")
+                except:
                     break
-            old_cookie = driver.get_cookie("aws-waf-token")
-            old_cookie["value"] = token
-            driver.delete_cookie("aws-waf-token")
-            driver.add_cookie(old_cookie)
-            sleep(3)
-            #driver.execute_script("AwsWafIntegration.saveReferrer();")
-            driver.execute_script(f'const res = await AwsWafIntegration.fetch("{driver.current_url}"); console.log("AWS RES: ", res)')
-            sleep(3)
-            #driver.refresh()
-            sleep(5)
-        except Exception as e:
+                else:
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    sleep(1)
+                    shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
+                    my_img = shadowelement.find_element(By.ID, "root")
+                    count_attempt += 1
+                    size = my_img.size
+                    if count_attempt == 1:
+                        select_l = my_img.find_element(By.TAG_NAME, "select")
+                        select_l.click()
+                        sleep(1)
+                        select_l.send_keys(Keys.DOWN)
+                        sleep(3)
+                        shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
+                        my_img = shadowelement.find_element(By.ID, "root")
+                    # print("SIZE: ", size)
+                    screenshot = my_img.screenshot_as_png
+                    screenshot_bytes = BytesIO(screenshot)
+                    # with open('screenshot.png', 'wb') as file:
+                    #     file.write(screenshot_bytes.getvalue())
+                    print("Count attempts:", count_attempt)
+                    base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
+                    print("Solve captcha...")
+                    result = self.captcha_solver.solve_amazon(base64_screenshot)  # Send image in 2captcha service
+                    print(result['code'])
+                    l = result['code'].split(':')[1].split(';')
+                    l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
+                    button_coord = [size['width'] - 30, size['height'] - 30]
+                    l.append(button_coord)
+                    actions = ActionChains(driver)
+                    for i in l:
+                        actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
+                        actions.perform()
+                        sleep(0.5)
+                        actions.reset_actions()
+                    sleep(1)
+                    confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
+                    actions.move_to_element_with_offset(confirm_button, 40, 15).click()
+                    actions.perform()
+        except Exception as ex:
+            print(ex)
             driver.refresh()
             raise CaptchaUnsolvableError()
 
