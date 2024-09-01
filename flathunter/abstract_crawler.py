@@ -204,7 +204,7 @@ class Crawler(ABC):
         """Resolve Amazon Captcha"""
         try:
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            sleep(1)
+            sleep(3)
             shadowelement = driver.execute_script("return document.querySelector('awswaf-captcha').shadowRoot")
             my_img = shadowelement.find_element(By.ID, "root")
             size = my_img.size
@@ -231,10 +231,13 @@ class Crawler(ABC):
                 sleep(0.5)
                 actions.reset_actions()
             sleep(1)
-            confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
-            actions.move_to_element_with_offset(confirm_button, 40, 15).click()
-            actions.perform()
-            sleep(2)
+            try:
+                confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
+                actions.move_to_element_with_offset(confirm_button, 40, 15).click()
+                actions.perform()
+                sleep(4)
+            except:
+                pass
             try:
                 driver.find_element(By.TAG_NAME, "awswaf-captcha")
             except:
