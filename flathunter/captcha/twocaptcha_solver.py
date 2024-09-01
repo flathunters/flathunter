@@ -4,6 +4,7 @@ from typing import Dict
 from time import sleep
 import backoff
 import requests
+from twocaptcha import TwoCaptcha
 
 from flathunter.logging import logger
 from flathunter.captcha.captcha_solver import (
@@ -46,6 +47,11 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
+    def solve_amazon(self, image):
+        logger.info("Trying to solve amazon.")
+        solver = TwoCaptcha(self.api_key, defaultTimeout=60, pollingInterval=5)
+        result = solver.coordinates(image, lang='en')
+        return result
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
     def __submit_2captcha_request(self, params: Dict[str, str]) -> str:
