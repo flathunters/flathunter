@@ -38,8 +38,16 @@ class CaptchaSolver:
     def solve_geetest(self, geetest: str, challenge: str, page_url: str) -> GeetestResponse:
         """Should be implemented in subclass"""
         raise NotImplementedError()
-    
-    def solve_awswaf(self, sitekey: str, iv: str, context: str, page_url: str) -> AwsAwfResponse:
+
+    def solve_awswaf(
+        self,
+        sitekey: str,
+        iv: str,
+        context: str,
+        challenge_script: str,
+        captcha_script: str,
+        page_url: str
+    ) -> AwsAwfResponse:
         """Should be implemented in subclass"""
         raise NotImplementedError()
 
@@ -49,9 +57,12 @@ class CaptchaSolver:
 
 class CaptchaUnsolvableError(Exception):
     """Raised when Captcha was unsolveable"""
-    def __init__(self):
+    def __init__(self, message = None):
         super().__init__()
-        self.message = "Failed to solve captcha."
+        if message is not None:
+            self.message = message
+        else:
+            self.message = "Failed to solve captcha."
 
 class CaptchaBalanceEmpty(Exception):
     """Raised when Captcha account is out of credit"""

@@ -204,9 +204,8 @@ class Crawler(ABC):
 
         # Intercept background network traffic via log sniffing
         sleep(2)
-        logs_raw = driver.get_log("performance")
-        logs = [json.loads(lr["message"])["message"] for lr in logs_raw]
-        
+        logs = [json.loads(lr["message"])["message"] for lr in driver.get_log("performance")]
+
         def log_filter(log_):
             return (
                 # is an actual response
@@ -214,32 +213,40 @@ class Crawler(ABC):
                 # and json
                 and "json" in log_["params"]["response"]["mimeType"]
             )
-        
+
+        context = None
+        iv = None
         for log in filter(log_filter, logs):
             request_id = log["params"]["requestId"]
             resp_url = log["params"]["response"]["url"]
             if "problem" in resp_url and "awswaf" in resp_url:
-                response = driver.execute_cdp_cmd("Network.getResponseBody", {"requestId": request_id})
+                response = driver.execute_cdp_cmd(
+                    "Network.getResponseBody", {"requestId": request_id}
+                )
                 response_json = json.loads(response["body"])
                 iv = response_json["state"]["iv"]
                 context = response_json["state"]["payload"]
                 sitekey = response_json["key"]
-
+        if context is None or iv is None:
+            raise CaptchaUnsolvableError("Unable to find captcha data in logs")
 
         sitekey = re.findall(
             r"apiKey: \"(.*?)\"", driver.page_source)[0]
 
-        patternChallenge = r'src="([^"]*challenge\.js)"'
-        challenge_matches = re.findall(patternChallenge, driver.page_source)
+        challenge = None
+        challenge_matches = re.findall(r'src="([^"]*challenge\.js)"', driver.page_source)
         for match in challenge_matches:
-            print(f'Challenge SRC Value: {match}')   
+            logger.debug('Challenge SRC Value: %s', match)
             challenge = match
 
-        patternJsApi = r'src="([^"]*jsapi\.js)"'
-        jsapi_matches = re.findall(patternJsApi, driver.page_source)
+        jsapi = None
+        jsapi_matches = re.findall(r'src="([^"]*jsapi\.js)"', driver.page_source)
         for match in jsapi_matches:
-            print(f'JsApi SRC Value: {match}')   
+            logger.debug('JsApi SRC Value: %s', match)
             jsapi = match
+
+        if challenge is None or jsapi is None:
+            raise CaptchaUnsolvableError("Unable to find challenge or JSApi value in page source")
 
         try:
             captcha = self.captcha_solver.solve_awswaf(

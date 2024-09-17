@@ -302,7 +302,7 @@ Preis: {price}
     def get_twocaptcha_key(self) -> str:
         """API Token for 2captcha"""
         return self._read_yaml_path("captcha.2captcha.api_key", "")
-    
+
     def get_capmonster_key(self) -> str:
         """API Token for Capmonster"""
         return self._read_yaml_path("captcha.capmonster.api_key", "")
@@ -316,7 +316,7 @@ Preis: {price}
         twocaptcha_api_key = self.get_twocaptcha_key()
         if twocaptcha_api_key:
             return TwoCaptchaSolver(twocaptcha_api_key)
-        
+
         capmonster_api_key = self.get_capmonster_key()
         if capmonster_api_key:
             return CapmonsterSolver(capmonster_api_key)
@@ -409,7 +409,7 @@ class CaptchaEnvironmentConfig(YamlConfig):
     def get_twocaptcha_key(self) -> str:
         """Return the currently configured 2captcha API key"""
         return Env.FLATHUNTER_2CAPTCHA_KEY() or super().get_twocaptcha_key()  # pylint: disable=no-member
-    
+
     def get_capmonster_key(self) -> str:
         """Return the currently configured Capmonster API key"""
         return Env.FLATHUNTER_CAPMONSTER_KEY() or super().get_capmonster_key()

@@ -59,6 +59,8 @@ def get_chrome_driver(driver_arguments):
     """Configure Chrome WebDriver"""
     logger.info('Initializing Chrome WebDriver for crawler...')
     chrome_options = uc.ChromeOptions() # pylint: disable=no-member
+    if platform == "darwin":
+        chrome_options.add_argument("--headless")
     if driver_arguments is not None:
         for driver_argument in driver_arguments:
             chrome_options.add_argument(driver_argument)

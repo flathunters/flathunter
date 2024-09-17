@@ -11,6 +11,7 @@ from flathunter.captcha.captcha_solver import (
     CaptchaSolver,
     CaptchaUnsolvableError,
     GeetestResponse,
+    AwsAwfResponse,
     RecaptchaResponse,
 )
 
@@ -58,6 +59,17 @@ class ImageTyperzSolver(CaptchaSolver):
         )
         return RecaptchaResponse(self.__retrieve_imagetyperz_result(captcha_id))
 
+    def solve_awswaf(
+        self,
+        sitekey: str,
+        iv: str,
+        context: str,
+        challenge_script: str,
+        captcha_script: str,
+        page_url: str
+    ) -> AwsAwfResponse:
+        """Should be implemented at some point"""
+        raise NotImplementedError("AWS WAF captchas not supported for Imagetyperz")
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
     def __submit_imagetyperz_request(self, submit_url: str, params: Dict[str, str]) -> str:
