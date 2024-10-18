@@ -11,6 +11,7 @@ from flathunter.captcha.captcha_solver import (
     CaptchaBalanceEmpty,
     CaptchaUnsolvableError,
     GeetestResponse,
+    AwsAwfResponse,
     RecaptchaResponse,
 )
 
@@ -46,12 +47,23 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
+    def solve_awswaf(
+        self,
+        sitekey: str,
+        iv: str,
+        context: str,
+        challenge_script: str,
+        captcha_script: str,
+        page_url: str
+    ) -> AwsAwfResponse:
+        """Should be implemented at some point"""
+        raise NotImplementedError("AWS WAF captchas not supported for 2Captcha")
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
     def __submit_2captcha_request(self, params: Dict[str, str]) -> str:
         submit_url = "http://2captcha.com/in.php"
         submit_response = requests.post(submit_url, params=params, timeout=30)
-        logger.debug("Got response from 2captcha/in: %s", submit_response.text)
+        logger.info("Got response from 2captcha/in: %s", submit_response.text)
 
         if not submit_response.text.startswith("OK"):
             raise requests.HTTPError(response=submit_response)
@@ -66,6 +78,7 @@ class TwoCaptchaSolver(CaptchaSolver):
             "key": self.api_key,
             "action": "get",
             "id": captcha_id,
+            "json": 0,
         }
         while True:
             retrieve_response = requests.get(retrieve_url, params=params, timeout=30)

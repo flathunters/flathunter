@@ -66,6 +66,7 @@ def get_chrome_driver(driver_arguments):
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
     chrome_options.add_argument("--headless=new")
+    chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     driver = uc.Chrome(version_main=chrome_version, options=chrome_options) # pylint: disable=no-member
 
     driver.execute_cdp_cmd(
