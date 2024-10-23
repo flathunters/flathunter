@@ -33,6 +33,7 @@ types-beautifulsoup4 = "*"
 selenium = "*"
 gunicorn = "22.0.0"
 flask-api = {editable = true, ref = "develop", git = "git+https://github.com/flask-api/flask-api.git"}
+2captcha-python = "*"
 
 [dev-packages]
 
