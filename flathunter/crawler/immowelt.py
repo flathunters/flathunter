@@ -20,29 +20,18 @@ class Immowelt(Crawler):
     def get_expose_details(self, expose):
         """Loads additional details for an expose by processing the expose detail URL"""
         soup = self.get_page(expose['url'])
-        date = datetime.datetime.now().strftime("%2d.%2m.%Y")
-        expose['from'] = date
 
-        immo_div = soup.find("app-estate-object-informations")
-        if not isinstance(immo_div, Tag):
-            return expose
-        immo_div = soup.find("div", {"class": "equipment ng-star-inserted"})
+        immo_div = soup.find("div", {"data-testid": "aviv.CDP.MainColumn"})
         if not isinstance(immo_div, Tag):
             return expose
 
-        details = immo_div.find_all("p")
-        for detail in details:
-            if detail.text.strip() == "Bezug":
-                date = detail.findNext("p").text.strip()
-                no_exact_date_given = re.match(
-                    r'.*sofort.*|.*Nach Vereinbarung.*',
-                    date,
-                    re.MULTILINE|re.DOTALL|re.IGNORECASE
-                )
-                if no_exact_date_given:
-                    date = datetime.datetime.now().strftime("%2d.%2m.%Y")
-                break
-        expose['from'] = date
+        try:
+            title = immo_div.find(
+                "h2", attrs={"data-testid": "aviv.CDP.Sections.Description.MainDescription.Title"}).text
+        except:
+            title = expose["title"]
+        expose["title"] = title.strip()
+
         return expose
 
     # pylint: disable=too-many-locals
@@ -86,7 +75,9 @@ class Immowelt(Crawler):
 
             id_element = adv.find("a")
             try:
-                url = "https://immowelt.de" + id_element.get("href")
+                url = id_element.get("href")
+                if "https" not in url:
+                    url = "https://immowelt.de/" + url
             except IndexError:
                 continue
 
@@ -117,7 +108,7 @@ class Immowelt(Crawler):
                 'address': address,
                 'crawler': self.get_name()
             }
-            logger.info(details)
+            details = self.get_expose_details(details)
             entries.append(details)
 
         logger.debug('Number of entries found: %d', len(entries))
