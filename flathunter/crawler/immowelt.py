@@ -27,7 +27,8 @@ class Immowelt(Crawler):
 
         try:
             title = immo_div.find(
-                "h2", attrs={"data-testid": "aviv.CDP.Sections.Description.MainDescription.Title"}).text
+                        "h2", attrs={"data-testid": "aviv.CDP.Sections.Description.MainDescription.Title"}
+                    ).text  # type: ignore
         except:
             title = expose["title"]
         expose["title"] = title.strip()
