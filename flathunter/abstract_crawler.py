@@ -3,10 +3,6 @@ from abc import ABC
 import re
 from time import sleep
 from typing import Optional, Any
-import json
-
-from io import BytesIO
-import base64
 
 import backoff
 import requests
@@ -200,134 +196,12 @@ class Crawler(ABC):
             driver.refresh()
             raise
 
-    # pylint: disable=too-many-locals
     @backoff.on_exception(wait_gen=backoff.constant,
                         exception=CaptchaUnsolvableError,
                         max_tries=3)
     def resolve_awsawf(self, driver):
         """Resolve AWS WAF Captcha"""
-
-        # Intercept background network traffic via log sniffing
-        sleep(2)
-        logs = [json.loads(lr["message"])["message"] for lr in driver.get_log("performance")]
-
-        def log_filter(log_):
-            return (
-                # is an actual response
-                log_["method"] == "Network.responseReceived"
-                # and json
-                and "json" in log_["params"]["response"]["mimeType"]
-            )
-
-        context = None
-        iv = None
-        for log in filter(log_filter, logs):
-            request_id = log["params"]["requestId"]
-            resp_url = log["params"]["response"]["url"]
-            if "problem" in resp_url and "awswaf" in resp_url:
-                response = driver.execute_cdp_cmd(
-                    "Network.getResponseBody", {"requestId": request_id}
-                )
-                response_json = json.loads(response["body"])
-                iv = response_json["state"]["iv"]
-                context = response_json["state"]["payload"]
-                sitekey = response_json["key"]
-        if context is None or iv is None:
-            raise CaptchaUnsolvableError("Unable to find captcha data in logs")
-
-        sitekey = re.findall(
-            r"apiKey: \"(.*?)\"", driver.page_source)[0]
-
-        challenge = None
-        challenge_matches = re.findall(r'src="([^"]*challenge\.js)"', driver.page_source)
-        for match in challenge_matches:
-            logger.debug('Challenge SRC Value: %s', match)
-            challenge = match
-
-        jsapi = None
-        jsapi_matches = re.findall(r'src="([^"]*jsapi\.js)"', driver.page_source)
-        for match in jsapi_matches:
-            logger.debug('JsApi SRC Value: %s', match)
-            jsapi = match
-
-        if challenge is None or jsapi is None:
-            raise CaptchaUnsolvableError("Unable to find challenge or JSApi value in page source")
-
-        try:
-            captcha = self.captcha_solver.solve_awswaf(
-                sitekey,
-                iv,
-                context,
-                challenge,
-                jsapi,
-                driver.current_url
-            )
-            old_cookie = driver.get_cookie('aws-waf-token')
-            new_cookie = old_cookie
-            new_cookie['value'] = captcha.token
-            driver.delete_cookie('aws-waf-token')
-            driver.add_cookie(new_cookie)
-            sleep(1)
-            driver.refresh()
-        except CaptchaUnsolvableError:
-            driver.refresh()
-            raise
-
-    @backoff.on_exception(wait_gen=backoff.constant,
-                          exception=CaptchaUnsolvableError,
-                          max_tries=3)
-    def resolve_amazon(self, driver):
-        """Resolve Amazon Captcha"""
-        try:
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            sleep(3)
-            shadowelement = driver.execute_script(
-                "return document.querySelector('awswaf-captcha').shadowRoot"
-            )
-            my_img = shadowelement.find_element(By.ID, "root")
-            size = my_img.size
-            select_l = my_img.find_element(By.TAG_NAME, "select")
-            select_l.click()
-            sleep(1)
-            select_l.send_keys(Keys.DOWN)
-            sleep(3)
-            shadowelement = driver.execute_script(
-                "return document.querySelector('awswaf-captcha').shadowRoot"
-            )
-            my_img = shadowelement.find_element(By.ID, "root")
-            screenshot = my_img.screenshot_as_png
-            screenshot_bytes = BytesIO(screenshot)
-            base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
-            # Send image in 2captcha service
-            result = self.captcha_solver.solve_amazon(base64_screenshot)
-            logger.info(result.token)
-            l = result.token.split(':')[1].split(';')
-            l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
-            button_coord = [size['width'] - 30, size['height'] - 30]
-            l.append(button_coord)
-            actions = ActionChains(driver)
-            for i in l:
-                actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
-                actions.perform()
-                sleep(0.5)
-                actions.reset_actions()
-            sleep(1)
-            try:
-                confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
-                actions.move_to_element_with_offset(confirm_button, 40, 15).click()
-                actions.perform()
-                sleep(4)
-            except NoSuchElementException:
-                pass
-            try:
-                driver.find_element(By.TAG_NAME, "awswaf-captcha")
-            except NoSuchElementException:
-                logger.info("Captcha solved")
-            else:
-                raise CaptchaUnsolvableError()
-        except Exception as ex:
-            driver.refresh()
-            raise CaptchaUnsolvableError() from ex
+        self.captcha_solver.resolve_awswaf(driver)
 
     @backoff.on_exception(wait_gen=backoff.constant,
                           exception=CaptchaUnsolvableError,

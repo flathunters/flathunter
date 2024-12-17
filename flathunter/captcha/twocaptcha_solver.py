@@ -1,10 +1,18 @@
 """Captcha solver for 2Captcha Captcha Solving Service (https://2captcha.com)"""
+import base64
 import json
+from io import BytesIO
 from typing import Dict
 from time import sleep
+
 import backoff
 import requests
 from twocaptcha import TwoCaptcha
+
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 
 from flathunter.logging import logger
 from flathunter.captcha.captcha_solver import (
@@ -48,21 +56,60 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
-    def solve_awswaf(
-        self,
-        sitekey: str,
-        iv: str,
-        context: str,
-        challenge_script: str,
-        captcha_script: str,
-        page_url: str
-    ) -> AwsAwfResponse:
-        """Using the `solve_amazon` method instead"""
-        raise NotImplementedError()
+    def resolve_awswaf(self, driver):
+        """Resolve Amazon Captcha"""
+        try:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            sleep(3)
+            shadowelement = driver.execute_script(
+                "return document.querySelector('awswaf-captcha').shadowRoot"
+            )
+            my_img = shadowelement.find_element(By.ID, "root")
+            size = my_img.size
+            select_l = my_img.find_element(By.TAG_NAME, "select")
+            select_l.click()
+            sleep(1)
+            select_l.send_keys(Keys.DOWN)
+            sleep(3)
+            shadowelement = driver.execute_script(
+                "return document.querySelector('awswaf-captcha').shadowRoot"
+            )
+            my_img = shadowelement.find_element(By.ID, "root")
+            screenshot = my_img.screenshot_as_png
+            screenshot_bytes = BytesIO(screenshot)
+            base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
+            # Send image in 2captcha service
+            result = self.solve_awswaf(base64_screenshot)
+            logger.info(result.token)
+            l = result.token.split(':')[1].split(';')
+            l = [[int(val.split('=')[1]) for val in coord.split(',')] for coord in l]
+            button_coord = [size['width'] - 30, size['height'] - 30]
+            l.append(button_coord)
+            actions = ActionChains(driver)
+            for i in l:
+                actions.move_to_element_with_offset(my_img, i[0] - 160, i[1] - 211).click()
+                actions.perform()
+                sleep(0.5)
+                actions.reset_actions()
+            sleep(1)
+            try:
+                confirm_button = my_img.find_element(By.ID, "amzn-btn-verify-internal")
+                actions.move_to_element_with_offset(confirm_button, 40, 15).click()
+                actions.perform()
+                sleep(4)
+            except NoSuchElementException:
+                pass
+            try:
+                driver.find_element(By.TAG_NAME, "awswaf-captcha")
+            except NoSuchElementException:
+                logger.info("Captcha solved")
+            else:
+                raise CaptchaUnsolvableError()
+        except Exception as ex:
+            driver.refresh()
+            raise CaptchaUnsolvableError() from ex
 
-    def solve_amazon(
+    def solve_awswaf(
         self,
         image_b64: str
     ) -> AwsAwfResponse:

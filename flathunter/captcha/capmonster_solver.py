@@ -1,4 +1,6 @@
 """Captcha solver for CapMonster Captcha Solving Service (https://capmonster.cloud)"""
+import json
+import re
 from typing import Dict
 from time import sleep
 import backoff
@@ -11,6 +13,7 @@ from flathunter.captcha.captcha_solver import (
     AwsAwfResponse,
     RecaptchaResponse,
 )
+from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
 
 class CapmonsterSolver(CaptchaSolver):
     """Implementation of Captcha solver for CapMonster"""
@@ -23,14 +26,64 @@ class CapmonsterSolver(CaptchaSolver):
         """Should be implemented in subclass"""
         raise NotImplementedError("Recaptcha captcha solving is not implemented for Capmonster")
 
+    # pylint: disable=too-many-locals
+    def resolve_awswaf(self, driver):
+        # Intercept background network traffic via log sniffing
+        sleep(2)
+        logs = [json.loads(lr["message"])["message"] for lr in driver.get_log("performance")]
+
+        def log_filter(log_):
+            return (
+                # is an actual response
+                log_["method"] == "Network.responseReceived"
+                # and json
+                and "json" in log_["params"]["response"]["mimeType"]
+            )
+
+        for log in filter(log_filter, logs):
+            request_id = log["params"]["requestId"]
+            resp_url = log["params"]["response"]["url"]
+            if "problem" in resp_url and "awswaf" in resp_url:
+                response = driver.execute_cdp_cmd(
+                    "Network.getResponseBody", {"requestId": request_id}
+                )
+                response_json = json.loads(response["body"])
+                sitekey = response_json["key"]
+
+        sitekey = re.findall(
+            r"apiKey: \"(.*?)\"", driver.page_source)[0]
+
+        jsapi = None
+        jsapi_matches = re.findall(r'src="([^"]*jsapi\.js)"', driver.page_source)
+        for match in jsapi_matches:
+            logger.debug('JsApi SRC Value: %s', match)
+            jsapi = match
+
+        if jsapi is None:
+            raise CaptchaUnsolvableError("Unable to find challenge or JSApi value in page source")
+
+        try:
+            captcha = self.solve_awswaf(
+                sitekey,
+                jsapi,
+                driver.current_url
+            )
+            old_cookie = driver.get_cookie('aws-waf-token')
+            new_cookie = old_cookie
+            new_cookie['value'] = captcha.token
+            driver.delete_cookie('aws-waf-token')
+            driver.add_cookie(new_cookie)
+            sleep(1)
+            driver.refresh()
+        except CaptchaUnsolvableError:
+            driver.refresh()
+            raise
+
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-positional-arguments
     def solve_awswaf(
         self,
         sitekey: str,
-        iv: str,
-        context: str,
-        challenge_script: str,
         captcha_script: str,
         page_url: str
     ) -> AwsAwfResponse:
