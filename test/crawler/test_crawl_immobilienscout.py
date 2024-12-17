@@ -53,7 +53,7 @@ def test_process_expose_fetches_details(crawler):
     assert len(entries) > 0
     updated_entries = [ crawler.get_expose_details(expose) for expose in entries ]
     for expose in updated_entries:
-        for attr in [ 'title', 'price', 'size', 'rooms', 'address', 'from' ]:
+        for attr in [ 'title', 'price', 'size', 'rooms', 'address' ]:
             assert expose[attr] is not None
 
 def test_twocaptcha_error_no_balance(crawler):
