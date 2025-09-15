@@ -59,6 +59,8 @@ class ImageTyperzSolver(CaptchaSolver):
         )
         return RecaptchaResponse(self.__retrieve_imagetyperz_result(captcha_id))
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def solve_awswaf(
         self,
         sitekey: str,

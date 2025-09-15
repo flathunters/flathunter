@@ -22,7 +22,6 @@ class AwsAwfResponse:
     """Response from AWS WAF"""
     token: str
 
-
 class CaptchaSolver:
     """Interface for Captcha solvers"""
 
@@ -39,15 +38,7 @@ class CaptchaSolver:
         """Should be implemented in subclass"""
         raise NotImplementedError()
 
-    def solve_awswaf(
-        self,
-        sitekey: str,
-        iv: str,
-        context: str,
-        challenge_script: str,
-        captcha_script: str,
-        page_url: str
-    ) -> AwsAwfResponse:
+    def resolve_awswaf(self, driver):
         """Should be implemented in subclass"""
         raise NotImplementedError()
 

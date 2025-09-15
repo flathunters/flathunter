@@ -3,7 +3,6 @@ from abc import ABC
 import re
 from time import sleep
 from typing import Optional, Any
-import json
 
 import backoff
 import requests
@@ -13,10 +12,11 @@ import requests_random_user_agent
 from bs4 import BeautifulSoup
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver import Chrome
+from selenium.webdriver import Chrome, Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 from flathunter import proxies
 from flathunter.captcha.captcha_solver import CaptchaUnsolvableError
@@ -201,72 +201,7 @@ class Crawler(ABC):
                         max_tries=3)
     def resolve_awsawf(self, driver):
         """Resolve AWS WAF Captcha"""
-
-        # Intercept background network traffic via log sniffing
-        sleep(2)
-        logs = [json.loads(lr["message"])["message"] for lr in driver.get_log("performance")]
-
-        def log_filter(log_):
-            return (
-                # is an actual response
-                log_["method"] == "Network.responseReceived"
-                # and json
-                and "json" in log_["params"]["response"]["mimeType"]
-            )
-
-        context = None
-        iv = None
-        for log in filter(log_filter, logs):
-            request_id = log["params"]["requestId"]
-            resp_url = log["params"]["response"]["url"]
-            if "problem" in resp_url and "awswaf" in resp_url:
-                response = driver.execute_cdp_cmd(
-                    "Network.getResponseBody", {"requestId": request_id}
-                )
-                response_json = json.loads(response["body"])
-                iv = response_json["state"]["iv"]
-                context = response_json["state"]["payload"]
-                sitekey = response_json["key"]
-        if context is None or iv is None:
-            raise CaptchaUnsolvableError("Unable to find captcha data in logs")
-
-        sitekey = re.findall(
-            r"apiKey: \"(.*?)\"", driver.page_source)[0]
-
-        challenge = None
-        challenge_matches = re.findall(r'src="([^"]*challenge\.js)"', driver.page_source)
-        for match in challenge_matches:
-            logger.debug('Challenge SRC Value: %s', match)
-            challenge = match
-
-        jsapi = None
-        jsapi_matches = re.findall(r'src="([^"]*jsapi\.js)"', driver.page_source)
-        for match in jsapi_matches:
-            logger.debug('JsApi SRC Value: %s', match)
-            jsapi = match
-
-        if challenge is None or jsapi is None:
-            raise CaptchaUnsolvableError("Unable to find challenge or JSApi value in page source")
-
-        try:
-            captcha = self.captcha_solver.solve_awswaf(
-                sitekey,
-                iv,
-                context,
-                challenge,
-                jsapi,
-                driver.current_url
-            )
-            old_cookie = driver.get_cookie('aws-waf-token')
-            new_cookie = old_cookie
-            new_cookie['value'] = captcha.token
-            driver.delete_cookie('aws-waf-token')
-            driver.add_cookie(new_cookie)
-            sleep(1)
-            driver.refresh()
-        except CaptchaUnsolvableError:
-            driver.refresh()
-            raise
+        self.captcha_solver.resolve_awswaf(driver)
 
     @backoff.on_exception(wait_gen=backoff.constant,
                           exception=CaptchaUnsolvableError,

@@ -35,6 +35,7 @@ gunicorn = "23.0.0"
 flask-api = {editable = true, ref = "develop", git = "git+https://github.com/flask-api/flask-api.git"}
 setuptools = "==75.6.0"
 certifi = "==2024.12.14"
+2captcha-python = "*"
 
 [dev-packages]
 exceptiongroup = "*"
