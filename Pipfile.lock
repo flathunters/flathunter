@@ -1318,11 +1318,11 @@
         },
         "requests-random-user-agent": {
             "hashes": [
-                "sha256:41157180200934098ca7c2dc0daac80bdd27cbe43e2cfeaa35324a42fc2af088",
-                "sha256:5763169f01e5568d03d1442581d77323ce1333dcdb69a7834acd5b2f767c548e"
+                "sha256:ecc95f95b8da16ef38ed479f9faa21b9bfbd49ebea55d8c0ad042e0b64b74d26",
+                "sha256:f4f4f7c23c317e3a8d5485c56e9e4000fe4dd2bfec308f151a6ff7a32189a99c"
             ],
             "index": "pypi",
-            "version": "==2023.2.15"
+            "version": "==2023.10.25"
         },
         "rsa": {
             "hashes": [
