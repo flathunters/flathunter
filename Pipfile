@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 PyYAML = "*"
-requests = "==2.32.3"
+requests = "==2.32.4"
 urllib3 = "*"
 lxml = "*"
 coverage = "*"
