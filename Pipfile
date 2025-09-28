@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 PyYAML = "*"
-requests = "==2.32.3"
+requests = "*"
 urllib3 = "*"
 lxml = "*"
 coverage = "*"
@@ -33,7 +33,7 @@ types-beautifulsoup4 = "==4.12.0.20241020"
 selenium = "==4.27.1"
 gunicorn = "23.0.0"
 flask-api = {editable = true, ref = "develop", git = "git+https://github.com/flask-api/flask-api.git"}
-setuptools = "==75.6.0"
+setuptools = "*"
 certifi = "*"
 jinja2 = "*"
 cryptography = "*"
