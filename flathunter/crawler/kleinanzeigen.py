@@ -56,7 +56,7 @@ class Kleinanzeigen(WebdriverCrawler):
             try:
                 price = expose.find(
                     class_="aditem-main--middle--price-shipping--price").text.strip()
-                tags = expose.find_all(class_="simpletag")
+                tags = expose.find_all(class_="aditem-main--middle--tags")
                 address = expose.find("div", {"class": "aditem-main--top--left"})
                 image_element = expose.find("div", {"class": "galleryimage-element"})
             except AttributeError as error:
@@ -73,15 +73,18 @@ class Kleinanzeigen(WebdriverCrawler):
             address = " ".join(address.split())
 
             rooms = ""
-            if len(tags) > 1:
-                rooms_match = re.search(r'\d+[.|,]*\d*', tags[1].text, flags=re.MULTILINE)
+            if len(tags) == 1:
+                rooms_match = re.search(r'\d[,|.]*(\d)*(\s)*Zi', tags[0].text, flags=re.MULTILINE)
                 if rooms_match is not None:
                     rooms = rooms_match.group()
+                    rooms = rooms.split(" ")[0]
 
-            try:
-                size = tags[0].text.strip()
-            except (IndexError, TypeError):
-                size = ""
+            size = ""
+            if len(tags) == 1:
+                size_match = re.search(r'\d+[,|.]*(\d)*', tags[0].text, flags=re.MULTILINE)
+                if size_match is not None:
+                    size = size_match.group()
+                    size = size.split(" ")[0]
 
             details = {
                 'id': int(expose.get("data-adid")),
@@ -89,11 +92,12 @@ class Kleinanzeigen(WebdriverCrawler):
                 'url': ("https://www.kleinanzeigen.de" + url),
                 'title': title_elem.text.strip(),
                 'price': price,
-                'size': size,
+                'size': size + "m²",
                 'rooms': rooms,
                 'address': address,
                 'crawler': self.get_name()
             }
+            logger.info('Details: %s', details)
             entries.append(details)
 
         logger.debug('Number of entries found: %d', len(entries))
