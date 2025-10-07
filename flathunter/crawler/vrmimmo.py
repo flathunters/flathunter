@@ -19,11 +19,11 @@ class VrmImmo(Crawler):
         self.config = config
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup: BeautifulSoup):
+    def extract_data(self, raw_data: BeautifulSoup):
         """Extracts all exposes from a provided Soup object"""
         entries = []
 
-        items = soup.find_all("div", {"class": "item-wrap js-serp-item"})
+        items = raw_data.find_all("div", {"class": "item-wrap js-serp-item"})
 
         for item in items:
             link = item.find("a", {"class": "js-item-title-link ci-search-result__link"})

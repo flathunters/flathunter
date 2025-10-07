@@ -38,10 +38,10 @@ class Kleinanzeigen(WebdriverCrawler):
         return expose
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup):
+    def extract_data(self, raw_data):
         """Extracts all exposes from a provided Soup object"""
         entries = []
-        soup = soup.find(id="srchrslt-adtable")
+        soup = raw_data.find(id="srchrslt-adtable")
 
         exposes = soup.find_all("article", class_="aditem")
         for  expose in exposes:

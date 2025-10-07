@@ -46,10 +46,10 @@ class Immowelt(Crawler):
         return expose
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup: BeautifulSoup):
+    def extract_data(self, raw_data: BeautifulSoup):
         """Extracts all exposes from a provided Soup object"""
         entries = []
-        soup_res = soup
+        soup_res = raw_data
         if not isinstance(soup_res, Tag):
             return []
 
