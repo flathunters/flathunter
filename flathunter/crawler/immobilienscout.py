@@ -129,32 +129,23 @@ class Immobilienscout(Crawler):
         logger.debug('Number of entries found: %d', len(entries))
         return entries
 
-
-    def get_results(self, search_url, max_pages=None):
-        """Loads the exposes from the ImmoScout site, starting at the provided URL"""
-        # convert to paged URL
-        # if '/P-' in search_url:
-        #     search_url = re.sub(r"/Suche/(.+?)/P-\d+", "/Suche/\1/P-{0}", search_url)
-        # else:
-        #     search_url = re.sub(r"/Suche/(.+?)/", r"/Suche/\1/P-{0}/", search_url)
-        if '&pagenumber' in search_url:
-            search_url = re.sub(r"&pagenumber=[0-9]", "&pagenumber={0}", search_url)
+    def get_results(self, search_url: str, max_pages: int | None = None) -> list:
+        """Fetches the exposes from the ImmoScout mobile API, starting at the provided URL"""
+        query = self.get_immoscout_query(search_url)
+        api_url = self.compose_api_url(query)
+        if '&pagenumber' in api_url:
+            api_url = re.sub(r"&pagenumber=[0-9]", "&pagenumber={0}", api_url)
         else:
-            search_url = search_url + '&pagenumber={0}'
-        logger.debug("Got search URL %s", search_url)
+            api_url = api_url + '&pagenumber={0}'
+        logger.debug("Got search URL %s", api_url)
 
-        # load first page to get number of entries
         page_no = 1
-        soup = self.get_page(search_url, self.get_driver(), page_no)
+        listings = self.fetch_api_data(api_url, page_no).json()
 
-        # If we are using Selenium, just parse the results from the JSON in the page response
-        if self.get_driver() is not None:
-            return self.get_entries_from_javascript()
-
-        no_of_results = get_result_count(soup)
+        no_of_results = listings["totalResults"]
 
         # get data from first page
-        entries = self.extract_data(soup)
+        entries = self.extract_data(listings)
 
         # iterate over all remaining pages
         while len(entries) < min(no_of_results, self.RESULT_LIMIT) and \
@@ -163,11 +154,7 @@ class Immobilienscout(Crawler):
                 '(Next page) Number of entries: %d / Number of results: %d',
                 len(entries), no_of_results)
             page_no += 1
-            soup = self.get_page(search_url, self.get_driver(), page_no)
-            cur_entry = self.extract_data(soup)
-            if isinstance(cur_entry, list):
-                break
-            entries.extend(cur_entry)
-        return entries
-
+            listings = self.fetch_api_data(api_url, page_no).json()
+            cur_entries = self.extract_data(listings)
+            entries.extend(cur_entries)
         return entries
