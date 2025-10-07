@@ -37,6 +37,7 @@ setuptools = "*"
 certifi = "*"
 jinja2 = "*"
 cryptography = "*"
+pydantic = "*"
 
 [dev-packages]
 exceptiongroup = "*"
