@@ -170,11 +170,11 @@ class WgGesucht(Crawler):
         self.config = config
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup: BeautifulSoup) -> List[Dict]:
+    def extract_data(self, raw_data: BeautifulSoup) -> List[Dict]:
         """Extracts all exposes from a provided Soup object"""
         entries = []
 
-        findings = soup.find_all(liste_attribute_filter)
+        findings = raw_data.find_all(liste_attribute_filter)
         existing_findings = [
             e for e in findings
             if isinstance(e, Tag) and e.has_attr('class') and not 'display-none' in e['class']

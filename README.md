@@ -388,6 +388,8 @@ This project is maintained by the members of the [Flat Hunters](https://github.c
 
 The original code was contributed by [@NodyHub](https://github.com/NodyHub), whose original idea this project was.
 
+Many thanks to the devs of [Fredy](https://github.com/orangecoding/fredy) for reverse engineering the ImmoScout24 mobile API and sharing their insights.
+
 ### Contributers
 
 Other contributions were made along the way by:

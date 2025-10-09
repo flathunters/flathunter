@@ -15,13 +15,13 @@ class Subito(Crawler):
         self.config = config
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup):
+    def extract_data(self, raw_data):
         """Extracts all exposes from a provided Soup object"""
         entries = []
 
         # as of today, subito provides a useful JSON that represents the state
         # of the search. Neat! We don't have to do much.
-        findings_json = soup.find("script", {"id": "__NEXT_DATA__"}).text.strip()
+        findings_json = raw_data.find("script", {"id": "__NEXT_DATA__"}).text.strip()
         findings = json.loads(findings_json)["props"]["state"]["items"]["list"]
 
         for row in findings:

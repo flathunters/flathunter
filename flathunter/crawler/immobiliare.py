@@ -15,11 +15,11 @@ class Immobiliare(Crawler):
         self.config = config
 
     # pylint: disable=too-many-locals
-    def extract_data(self, soup):
+    def extract_data(self, raw_data):
         """Extracts all exposes from a provided Soup object"""
         entries = []
 
-        results = soup.find(
+        results = raw_data.find(
             'ul', {"data-cy": "search-layout-list"})
 
         items = results.select("div.in-listingCard")

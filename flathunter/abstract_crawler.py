@@ -129,7 +129,7 @@ class Crawler(ABC):
 
         return BeautifulSoup(resp.content, 'lxml')
 
-    def extract_data(self, soup):
+    def extract_data(self, raw_data):
         """Should be implemented in subclass"""
         raise NotImplementedError
 
