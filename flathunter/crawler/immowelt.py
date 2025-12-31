@@ -53,7 +53,11 @@ class Immowelt(Crawler):
         if not isinstance(soup_res, Tag):
             return []
 
-        advertisements = soup_res.find_all("div", attrs={"class": "css-79elbk"})
+        core_list = soup_res.find("div",
+            attrs={"data-testid": "serp-core-scrollablelistview-testid"})
+        if not isinstance(core_list, Tag):
+            return []
+        advertisements = core_list.find_all("div", attrs={"class": "css-79elbk"})
         for adv in advertisements:
             try:
                 title = adv.find("div", {"class": "css-1cbj9xw"}).text
