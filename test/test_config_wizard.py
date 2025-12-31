@@ -32,7 +32,7 @@ class ConfigWizardTest(unittest.TestCase):
         ]
         res = config_wizard.configure_telegram(self.config)
         self.assertEqual(res["telegram"]["bot_token"], "123")
-        self.assertEqual(res["telegram"]["receiver_ids"][0], "456")
+        self.assertEqual(res["telegram"]["receiver_ids"][0], 456)
 
     @patch("config_wizard.prompt")
     def test_configure_mattermost(self, prompt_mock):

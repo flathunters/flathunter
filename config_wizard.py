@@ -125,7 +125,7 @@ def get_bot_token(config: YamlConfig) -> str:
         raise ConfigurationAborted()
     return result
 
-def get_receiver_id(config: YamlConfig) -> str:
+def get_receiver_id(config: YamlConfig) -> int:
     """Ask the user for the target Telegram User ID for the Telegram notifications"""
     clear()
     print("Telegram Receiver ID\n")
@@ -140,7 +140,7 @@ def get_receiver_id(config: YamlConfig) -> str:
 
     if len(result) == 0:
         raise ConfigurationAborted()
-    return result
+    return int(result)
 
 def configure_telegram(config: YamlConfig) -> Dict[str, Any]:
     """Ask the user for details required for the Telegram configuration"""
