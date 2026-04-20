@@ -1111,11 +1111,11 @@
         },
         "nodeenv": {
             "hashes": [
-                "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f",
-                "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9"
+                "sha256:5bb13e3eed2923615535339b3c620e76779af4cb4c6a90deccc9e36b274d3827",
+                "sha256:996c191ad80897d076bdfba80a41994c2b47c68e224c542b48feba42ba00f8bb"
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
-            "version": "==1.9.1"
+            "version": "==1.10.0"
         },
         "oauthlib": {
             "hashes": [
@@ -1378,12 +1378,12 @@
         },
         "pyright": {
             "hashes": [
-                "sha256:1d81fb43c2407bf566e97e57abb01c811973fdb21b2df8df59f870f688bdca71",
-                "sha256:c4872bc58c9643dac09e8a2e74d472c62036910b3bd37a32813989ef7576ea2c"
+                "sha256:099674dba5c10489832d4a4b2d302636152a9a42d317986c38474c76fe562262",
+                "sha256:6dd419f54fcc13f03b52285796d65e639786373f433e243f8b94cf93a7444d21"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.1.406"
+            "version": "==1.1.407"
         },
         "pysocks": {
             "hashes": [
