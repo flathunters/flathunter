@@ -97,6 +97,11 @@ def get_chrome_driver(driver_arguments):
             chrome_options.add_argument(driver_argument)
     chrome_version = get_chrome_version()
     chrome_options.add_argument("--headless=new")
+    # Return from driver.get() once the DOM is parsed instead of waiting for every
+    # sub-resource (ads, trackers, consent scripts). Some sites (e.g. Kleinanzeigen)
+    # load resources that never finish in headless Chrome, which otherwise hangs the
+    # page load until selenium raises ReadTimeoutError.
+    chrome_options.page_load_strategy = 'eager'
     chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
     driver_path = get_system_chromedriver_path()
     driver = uc.Chrome(
