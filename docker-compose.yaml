@@ -5,6 +5,10 @@ services:
     build: .
     shm_size: 512M # Workaround to fix docker crashes because of to small /dev/shm
     platform: linux/amd64 # For M1 to install google-chrome-stable; However still crashes on M1 when launching chrome (selenium.common.exceptions.WebDriverException: Message: unknown error: unable to discover open window in chrome (Session info: headless chrome=109.0.5414.119))
+    # NOTE: On native ARM hosts (ARM NAS, Raspberry Pi, etc.) remove the
+    # `platform: linux/amd64` line above to run the container natively instead of
+    # under amd64 emulation. The image installs chromium-driver, and
+    # undetected_chromedriver falls back to that native driver on ARM.
     command: python flathunt.py
     restart: always
     environment:

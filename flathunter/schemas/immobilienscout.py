@@ -18,7 +18,24 @@ class ImmoscoutQuery(BaseModel):
         "haus-mieten": "houserent",
         "wohnung-mieten": "apartmentrent",
         "wohnung-kaufen": "apartmentbuy",
-        "haus-kaufen": "housebuy"
+        "haus-kaufen": "housebuy",
+        # Special apartment types that also set equipment/type filters
+        "wohnung-mit-balkon-mieten": "apartmentrent",
+        "wohnung-mit-garten-mieten": "apartmentrent",
+        "souterrainwohnung-mieten": "apartmentrent",
+        "erdgeschosswohnung-mieten": "apartmentrent",
+        "hochparterrewohnung-mieten": "apartmentrent",
+        "etagenwohnung-mieten": "apartmentrent",
+        "loft-mieten": "apartmentrent",
+        "maisonette-mieten": "apartmentrent",
+        "terrassenwohnung-mieten": "apartmentrent",
+        "penthouse-mieten": "apartmentrent",
+        "dachgeschosswohnung-mieten": "apartmentrent",
+        "wohnung-mit-garage-mieten": "apartmentrent",
+        "wohnung-mit-einbaukueche-mieten": "apartmentrent",
+        "wohnung-mit-keller-mieten": "apartmentrent",
+        "neubauwohnung-mieten": "apartmentrent",
+        "barrierefreie-wohnung-mieten": "apartmentrent",
     }
 
     REAL_ESTATE_TYPE_TO_APARTMENT_EQUIPMENT_MAP: ClassVar[dict] = {

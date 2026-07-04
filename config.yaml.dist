@@ -13,6 +13,12 @@ loop:
     active: yes
     sleeping_time: 600
     random_jitter: True
+    # Optional: override the interval (in seconds) for individual crawlers,
+    # keyed by crawler class name (e.g. Immobilienscout, Kleinanzeigen).
+    # Crawlers not listed use sleeping_time. sleeping_time acts as the base
+    # loop tick, so no crawler polls faster than sleeping_time.
+    # crawler_intervals:
+    #     Kleinanzeigen: 600
 
 # Location of the Database to store already seen offerings
 # Defaults to the current directory

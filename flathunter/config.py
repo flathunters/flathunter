@@ -17,6 +17,7 @@ from flathunter.crawler.immobilienscout import Immobilienscout
 from flathunter.crawler.immowelt import Immowelt
 from flathunter.crawler.wggesucht import WgGesucht
 from flathunter.crawler.vrmimmo import VrmImmo
+from flathunter.crawler.inberlinwohnen import InBerlinWohnen
 from flathunter.crawler.subito import Subito
 from flathunter.filter import Filter
 from flathunter.logging import logger
@@ -147,7 +148,8 @@ Preis: {price}
             Subito(self),
             Immobiliare(self),
             Idealista(self),
-            VrmImmo(self)
+            VrmImmo(self),
+            InBerlinWohnen(self)
         ]
 
     def check_deprecated(self):
@@ -233,6 +235,16 @@ Preis: {price}
     def loop_period_seconds(self):
         """Number of seconds to wait between crawls when looping"""
         return self._read_yaml_path('loop.sleeping_time', 60 * 10)
+
+    def crawler_interval_seconds(self, crawler_name):
+        """Minimum number of seconds between crawls for a specific crawler.
+
+        Allows different polling frequencies per portal (e.g. poll
+        ImmobilienScout frequently while backing off on Kleinanzeigen to
+        avoid IP blocks). Falls back to the global loop sleeping_time when no
+        per-crawler override is configured."""
+        intervals = self._read_yaml_path('loop.crawler_intervals', {}) or {}
+        return intervals.get(crawler_name, self.loop_period_seconds())
 
     def random_jitter_enabled(self):
         """Whether a random delay should be added to loop sleeping time, defaults to true"""
