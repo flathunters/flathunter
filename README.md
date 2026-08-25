@@ -49,6 +49,7 @@ Currently available messaging services are [Telegram](https://telegram.org/), [M
 
 There are at least four different rental property marketplace sites that are widely used in Germany - [ImmoScout24](https://www.immobilienscout24.de/), [Immowelt](https://www.immowelt.de/), [WG-Gesucht](https://www.wg-gesucht.de/) and [Kleinanzeigen](https://www.kleinanzeigen.de/). Most people end up searching through listings on all four sites on an almost daily basis during their rental search.
 In Italy on the other hand, [idealista](https://www.idealista.it), [Subito](https://www.subito.it) and [Immobiliare.it](https://www.immobiliare.it) are very common for real-estate hunting.
+For Berlin, [inBerlinWohnen](https://www.inberlinwohnen.de/) is the joint apartment finder of the city's six municipal housing associations (*landeseigene Wohnungsbaugesellschaften*), a key source of affordable rentals.
 
 With ```Flathunter```, instead of visiting the same pages on the same  sites every day, you can set the system up to scan every site, filtering by your search criteria, and notify you when new rental property becomes available that meets your criteria.
 
@@ -151,6 +152,7 @@ To configure the searches, simply visit the property portal of your choice (e.g.
  * For Idealista, the link should point to the Italian version of the website, for the same reason reported above.
  * For Immobiliare, the link should point to the Italian version of the website, for the same reasons reported above.
  * For Subito, the link should point to the Italian version of the website, for the same reasons reported above.
+ * For inBerlinWohnen, use the URL of your saved search (*Wohnungsfinder*) on [inberlinwohnen.de](https://www.inberlinwohnen.de/), which crawls the combined listings of Berlin's municipal housing companies. Unlike the first-page-only crawlers above, it follows pagination.
 
 #### Telegram
 
